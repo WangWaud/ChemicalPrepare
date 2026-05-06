@@ -635,6 +635,64 @@
       .comp-table { font-size: 0.78rem; }
     }
 
+    /* Memo List */
+    .memo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .memo-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+    }
+    .memo-item:hover {
+      border-color: rgba(37,99,235,0.3);
+      background: rgba(37,99,235,0.02);
+    }
+    .memo-icon {
+      font-size: 1.5rem;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .memo-content {
+      flex: 1;
+    }
+    .memo-title {
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+    }
+    .memo-detail {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+    .memo-detail strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .memo-badge {
+      padding: 0.2rem 0.6rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
     /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -665,6 +723,7 @@
     <button class="nav-btn" data-panel="metabolite">代谢物处理</button>
     <button class="nav-btn" data-panel="stock">母液配制</button>
     <button class="nav-btn" data-panel="pcr">PCR 反应</button>
+    <button class="nav-btn" data-panel="memo">备忘录</button>
   </nav>
 
   <div class="main">
@@ -2608,6 +2667,65 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- ==================== 备忘录 ==================== -->
+    <div class="panel" id="panel-memo">
+      <div class="recipe-card open" id="card-memo-plates">
+        <div class="recipe-header" onclick="toggleCard('card-memo-plates')">
+          <div class="recipe-icon" style="background:rgba(124,58,237,0.1);color:var(--purple);">📝</div>
+          <div>
+            <div class="recipe-title">培养基添加量备忘</div>
+            <div class="recipe-subtitle">常用器皿与对应培养基/基质添加量速查</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              记录常用实验器皿与培养基/营养基质的添加量，方便快速查阅。
+            </div>
+
+            <div class="memo-list">
+              <div class="memo-item">
+                <div class="memo-icon">🟫</div>
+                <div class="memo-content">
+                  <div class="memo-title">13×13 cm 方皿</div>
+                  <div class="memo-detail">固体培养基 <strong>30 mL</strong></div>
+                </div>
+                <div class="memo-badge">方皿</div>
+              </div>
+
+              <div class="memo-item">
+                <div class="memo-icon">🟡</div>
+                <div class="memo-content">
+                  <div class="memo-title">9 cm 直径圆皿</div>
+                  <div class="memo-detail">固体培养基 <strong>10 mL</strong></div>
+                </div>
+                <div class="memo-badge">圆皿</div>
+              </div>
+
+              <div class="memo-item">
+                <div class="memo-icon">🪴</div>
+                <div class="memo-content">
+                  <div class="memo-title">常用玉米盆</div>
+                  <div class="memo-detail">营养基质 <strong>900 mL</strong></div>
+                </div>
+                <div class="memo-badge">盆栽</div>
+              </div>
+            </div>
+
+            <div class="box info">
+              <div class="box-title">💡 提示</div>
+              <ul>
+                <li>方皿较大，30 mL 培养基可保证均匀覆盖底部。</li>
+                <li>圆皿 10 mL 为标准量，可根据实验需要适当增减（8-12 mL）。</li>
+                <li>玉米盆营养基质用量取决于盆的规格，900 mL 为常用标准盆的推荐量。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
