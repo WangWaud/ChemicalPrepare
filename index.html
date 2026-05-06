@@ -1,0 +1,3096 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>实验室试剂配方计算器</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f8f9fb;
+      --bg-input: #f0f2f5;
+      --border: #d8dde5;
+      --border-focus: #2563eb;
+      --text: #1a1f2e;
+      --text-dim: #5a6677;
+      --text-muted: #8899aa;
+      --accent: #2563eb;
+      --accent-dim: #1d4ed8;
+      --green: #16a34a;
+      --green-dim: #15803d;
+      --yellow: #b45309;
+      --yellow-dim: #92400e;
+      --red: #dc2626;
+      --red-dim: #b91c1c;
+      --purple: #7c3aed;
+      --orange: #ea580c;
+      --cyan: #0891b2;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.06);
+      --shadow-lg: 0 4px 24px rgba(0,0,0,0.1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(37,99,235,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 90%, rgba(124,58,237,0.03) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app { position: relative; z-index: 1; }
+
+    /* Header */
+    .header {
+      padding: 3rem 2rem 2rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(37,99,235,0.03) 0%, transparent 100%);
+    }
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #1a1f2e 0%, #2563eb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .header p {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      font-weight: 300;
+    }
+
+    /* Nav Tabs */
+    .nav {
+      display: flex;
+      gap: 0.25rem;
+      padding: 1rem 2rem 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .nav::-webkit-scrollbar { display: none; }
+    .nav-btn {
+      padding: 0.6rem 1.1rem;
+      background: transparent;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      color: var(--text-dim);
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .nav-btn:hover { color: var(--text); background: var(--bg-card); }
+    .nav-btn.active {
+      color: var(--accent);
+      background: var(--bg-card);
+      border-color: var(--border);
+    }
+    .nav-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 2px 2px 0 0;
+    }
+
+    /* Main Content */
+    .main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem 4rem;
+    }
+
+    /* Recipe Panel */
+    .panel { display: none; animation: fadeIn 0.3s ease; }
+    .panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Recipe Card */
+    .recipe-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      transition: border-color 0.2s;
+    }
+    .recipe-card:hover { border-color: rgba(37,99,235,0.25); }
+
+    .recipe-header {
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+    .recipe-header:hover { background: var(--bg-card-hover); }
+    .recipe-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .recipe-title { font-weight: 600; font-size: 1rem; flex: 1; }
+    .recipe-subtitle { color: var(--text-dim); font-size: 0.8rem; font-weight: 400; }
+    .recipe-toggle {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      transition: transform 0.3s ease;
+    }
+    .recipe-card.open .recipe-toggle { transform: rotate(180deg); }
+
+    .recipe-body { display: none; }
+    .recipe-card.open .recipe-body { display: block; }
+
+    .recipe-content { padding: 1.5rem; }
+
+    /* Description */
+    .desc {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      line-height: 1.8;
+      margin-bottom: 1.5rem;
+      padding: 1rem 1.2rem;
+      background: rgba(37,99,235,0.05);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+
+    /* Calculator */
+    .calc-section {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .calc-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .calc-title::before {
+      content: '';
+      width: 3px;
+      height: 14px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .input-label {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      min-width: 100px;
+      text-align: right;
+    }
+    .input-field {
+      flex: 1;
+      max-width: 200px;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-field:focus { border-color: var(--border-focus); }
+    .input-unit {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      min-width: 40px;
+    }
+
+    /* Result */
+    .result-box {
+      margin-top: 1rem;
+      padding: 1rem 1.2rem;
+      background: rgba(22,163,74,0.06);
+      border: 1px solid rgba(22,163,74,0.18);
+      border-radius: var(--radius-sm);
+    }
+    .result-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--green);
+      margin-bottom: 0.5rem;
+    }
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.3rem 0;
+      font-size: 0.85rem;
+    }
+    .result-name { color: var(--text-dim); }
+    .result-value {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--green);
+      font-weight: 500;
+    }
+
+    /* Components Table */
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+    }
+    .comp-table th {
+      text-align: left;
+      padding: 0.6rem 0.8rem;
+      background: var(--bg-input);
+      color: var(--text-dim);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .comp-table td {
+      padding: 0.6rem 0.8rem;
+      border-bottom: 1px solid rgba(216,221,229,0.6);
+      vertical-align: top;
+    }
+    .comp-table tr:last-child td { border-bottom: none; }
+    .comp-table .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+    }
+
+    /* Steps */
+    .steps {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
+      margin-bottom: 1.5rem;
+    }
+    .steps li {
+      counter-increment: step;
+      position: relative;
+      padding: 0.6rem 0 0.6rem 2.5rem;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0.55rem;
+      width: 22px;
+      height: 22px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* Warning/Note boxes */
+    .box {
+      padding: 1rem 1.2rem;
+      border-radius: var(--radius-sm);
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      line-height: 1.8;
+    }
+    .box-title {
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .box.warn {
+      background: rgba(180,83,9,0.06);
+      border: 1px solid rgba(180,83,9,0.18);
+    }
+    .box.warn .box-title { color: var(--yellow); }
+    .box.danger {
+      background: rgba(220,38,38,0.06);
+      border: 1px solid rgba(220,38,38,0.18);
+    }
+    .box.danger .box-title { color: var(--red); }
+    .box.info {
+      background: rgba(37,99,235,0.05);
+      border: 1px solid rgba(37,99,235,0.15);
+    }
+    .box.info .box-title { color: var(--accent); }
+    .box.success {
+      background: rgba(22,163,74,0.06);
+      border: 1px solid rgba(22,163,74,0.18);
+    }
+    .box.success .box-title { color: var(--green); }
+
+    .box ul {
+      margin: 0.3rem 0 0 1.2rem;
+      padding: 0;
+    }
+    .box li {
+      margin-bottom: 0.2rem;
+    }
+
+    /* Color tags */
+    .tag {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .tag.blue { background: rgba(37,99,235,0.1); color: var(--accent); }
+    .tag.green { background: rgba(22,163,74,0.1); color: var(--green); }
+    .tag.yellow { background: rgba(180,83,9,0.1); color: var(--yellow); }
+    .tag.red { background: rgba(220,38,38,0.1); color: var(--red); }
+    .tag.purple { background: rgba(124,58,237,0.1); color: var(--purple); }
+
+    /* Storage badge */
+    .storage {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.2rem 0.6rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    /* Quick reference */
+    .quick-ref {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .quick-ref-item {
+      padding: 0.8rem 1rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      text-align: center;
+    }
+    .quick-ref-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.2rem; }
+    .quick-ref-value { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text); font-weight: 500; }
+
+    /* Section divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 2rem 0 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Formula display */
+    .formula {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg-input);
+      padding: 0.8rem 1.2rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: var(--cyan);
+      margin-bottom: 1rem;
+      overflow-x: auto;
+    }
+
+    /* Color indicator dots */
+    .color-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Search Bar */
+    .search-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0.8rem 2rem 0;
+    }
+    .search-box {
+      position: relative;
+    }
+    .search-box svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 0.65rem 1rem 0.65rem 2.6rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+    .search-clear {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px 6px;
+      border-radius: 4px;
+      display: none;
+    }
+    .search-clear:hover { background: var(--bg-input); }
+    .search-clear.show { display: block; }
+
+    .search-results-info {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      padding: 0.4rem 0 0;
+      display: none;
+    }
+    .search-results-info.show { display: block; }
+
+    /* Highlight matched cards */
+    .recipe-card.search-hidden { display: none; }
+    .recipe-card.search-match { border-color: var(--accent); }
+    .recipe-card.search-match .recipe-header { background: rgba(37,99,235,0.04); }
+
+    /* Footer / Recent Updates */
+    .footer {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 2rem 3rem;
+      border-top: 1px solid var(--border);
+    }
+    .footer-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .footer-title::before {
+      content: '';
+      width: 3px;
+      height: 14px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    .update-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .update-item {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+      font-size: 0.82rem;
+      align-items: baseline;
+    }
+    .update-item:not(:last-child) {
+      border-bottom: 1px solid rgba(216,221,229,0.5);
+    }
+    .update-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      min-width: 80px;
+    }
+    .update-tag {
+      display: inline-block;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      white-space: nowrap;
+      min-width: 36px;
+      text-align: center;
+    }
+    .update-tag.new { background: rgba(22,163,74,0.12); color: var(--green); }
+    .update-tag.fix { background: rgba(234,88,12,0.12); color: var(--orange); }
+    .update-tag.opt { background: rgba(37,99,235,0.12); color: var(--accent); }
+    .update-desc { color: var(--text-dim); flex: 1; }
+
+    /* Media Toggle */
+    .media-toggle {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 0.5rem 0 0.8rem;
+    }
+    .media-toggle-btn {
+      padding: 0.35rem 0.9rem;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .media-toggle-btn:not(:last-child) {
+      border-right: 1px solid var(--border);
+    }
+    .media-toggle-btn:hover {
+      background: var(--bg-input);
+    }
+    .media-toggle-btn.active {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .header { padding: 2rem 1rem 1.5rem; }
+      .nav { padding: 0.75rem 1rem 0; }
+      .main { padding: 1rem 1rem 3rem; }
+      .input-row { flex-wrap: wrap; }
+      .input-label { min-width: 80px; text-align: left; }
+      .input-field { max-width: 100%; }
+      .comp-table { font-size: 0.78rem; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #c4cad4; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9aa3b0; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>实验室试剂配方计算器</h1>
+    <p>Plant Pathology Lab — Reagent Preparation Guide</p>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="search-input" id="searchInput" placeholder="搜索试剂、培养基、配方…（如 PDA、12HEA、抗生素）" oninput="onSearch()" />
+      <button class="search-clear" id="searchClear" onclick="clearSearch()">×</button>
+    </div>
+    <div class="search-results-info" id="searchResultsInfo"></div>
+  </div>
+
+  <nav class="nav" id="nav">
+    <button class="nav-btn active" data-panel="media">培养基</button>
+    <button class="nav-btn" data-panel="disinfection">消毒试剂</button>
+    <button class="nav-btn" data-panel="suspension">菌悬液制备</button>
+    <button class="nav-btn" data-panel="metabolite">代谢物处理</button>
+    <button class="nav-btn" data-panel="stock">母液配制</button>
+    <button class="nav-btn" data-panel="pcr">PCR 反应</button>
+  </nav>
+
+  <div class="main">
+
+    <!-- ==================== 培养基 ==================== -->
+    <div class="panel active" id="panel-media">
+
+      <div class="recipe-card open" id="card-pda">
+        <div class="recipe-header" onclick="toggleCard('card-pda')">
+          <div class="recipe-icon" style="background:rgba(180,83,9,0.1);color:var(--yellow);">🧫</div>
+          <div>
+            <div class="recipe-title"><span id="pda-title">PDA</span> 培养基</div>
+            <div class="recipe-subtitle" id="pda-subtitle">Potato Dextrose Agar — 用于 Bm 培养与产孢</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="media-toggle">
+              <button class="media-toggle-btn active" onclick="event.stopPropagation();toggleMedia('pda',false)">液体 PDB</button>
+              <button class="media-toggle-btn" onclick="event.stopPropagation();toggleMedia('pda',true)">固体 PDA</button>
+            </div>
+            <div class="desc">
+              马铃薯葡萄糖培养基，是培养 <em>Bipolaris maydis</em> 的标准培养基。用于菌株活化、产孢诱导及菌落形态观察。液体版 (PDB) 用于菌丝扩培，固体版 (PDA) 用于产孢和菌落观察。
+            </div>
+
+            <div class="quick-ref">
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">PDB 粉剂</div>
+                <div class="quick-ref-value">26 g/L</div>
+              </div>
+              <div class="quick-ref-item" id="pda-agar-ref" style="display:none;">
+                <div class="quick-ref-label">琼脂添加</div>
+                <div class="quick-ref-value">15 g/L</div>
+              </div>
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">灭菌条件</div>
+                <div class="quick-ref-value">121°C 20min</div>
+              </div>
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">pH</div>
+                <div class="quick-ref-value">自然 (~5.6)</div>
+              </div>
+            </div>
+
+            <div class="calc-section">
+              <div class="calc-title">用量计算器</div>
+              <div class="formula" id="pda-formula">PDB粉剂(g) = 26 × 体积(L)</div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="pda-vol" value="1" min="0" step="0.1" oninput="calcPDA()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="result-box" id="pda-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item">
+                  <span class="result-name" id="pda-powder-label">PDB 粉剂</span>
+                  <span class="result-value" id="pda-powder">26.0 g</span>
+                </div>
+                <div class="result-item" id="pda-agar-row" style="display:none;">
+                  <span class="result-name">琼脂粉</span>
+                  <span class="result-value" id="pda-agar">15.0 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">蒸馏水</span>
+                  <span class="result-value" id="pda-water">1000 mL</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider">配制步骤</div>
+            <ol class="steps" id="pda-steps">
+              <li>称取 PDB 粉剂，加入对应体积的蒸馏水中。</li>
+              <li>加热搅拌至完全溶解（注意避免暴沸）。</li>
+              <li>121°C 高压蒸汽灭菌 20 分钟。</li>
+              <li>冷却后在超净台中分装至三角瓶或试管。</li>
+              <li>4°C 保存备用。</li>
+            </ol>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>灭菌前确保瓶内液体不超过容器容积的 2/3，防止暴沸溢出。</li>
+                <li>倒平板时培养基温度不宜过高（>60°C），否则冷凝水严重；不宜过低（<45°C），否则琼脂凝固。</li>
+                <li>用于 Bm 产孢时，可先在 PDA 上活化菌株，25°C 培养 7-10 d 后用无菌水洗下分生孢子。</li>
+                <li>长期保存菌株建议使用 PDA 斜面，4°C 可保存 1-3 个月。</li>
+              </ul>
+            </div>
+
+            <div class="box info">
+              <div class="box-title">💡 产孢技巧</div>
+              <ul>
+                <li>诱导产孢可使用 SNA (Spezieller Nährstoffarmer Agar) 或在 PDA 上进行 12h 光暗交替培养。</li>
+                <li>收集孢子时加入少量 0.05% Tween-20 助悬。</li>
+                <li>血球计数板计数，调节至 2×10⁵ conidia/mL 用于接种。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card" id="card-mm">
+        <div class="recipe-header" onclick="toggleCard('card-mm')">
+          <div class="recipe-icon" style="background:rgba(22,163,74,0.1);color:var(--green);">🧪</div>
+          <div>
+            <div class="recipe-title">MM 最小培养基</div>
+            <div class="recipe-subtitle">Minimal Medium — 用于 Sphingobium 碳源利用实验</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              最小培养基用于检测 <em>Sphingobium</em> 能否以 12HEA 作为唯一碳源生长，以及与葡萄糖的协同效应。基础配方参照 Davis Minimal Medium。
+            </div>
+
+            <table class="comp-table">
+              <thead>
+                <tr>
+                  <th>组分</th>
+                  <th>终浓度</th>
+                  <th>MW</th>
+                  <th>每升称量</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>K₂HPO₄</td>
+                  <td class="mono">7.0 g/L</td>
+                  <td class="mono">174.18</td>
+                  <td class="mono">7.0 g</td>
+                </tr>
+                <tr>
+                  <td>KH₂PO₄</td>
+                  <td class="mono">2.0 g/L</td>
+                  <td class="mono">136.09</td>
+                  <td class="mono">2.0 g</td>
+                </tr>
+                <tr>
+                  <td>(NH₄)₂SO₄</td>
+                  <td class="mono">1.0 g/L</td>
+                  <td class="mono">132.14</td>
+                  <td class="mono">1.0 g</td>
+                </tr>
+                <tr>
+                  <td>柠檬酸钠·2H₂O</td>
+                  <td class="mono">0.5 g/L</td>
+                  <td class="mono">294.10</td>
+                  <td class="mono">0.5 g</td>
+                </tr>
+                <tr>
+                  <td>MgSO₄·7H₂O</td>
+                  <td class="mono">0.1 g/L</td>
+                  <td class="mono">246.47</td>
+                  <td class="mono">0.1 g</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="calc-section">
+              <div class="calc-title">用量计算器</div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="mm-vol" value="1" min="0" step="0.1" oninput="calcMM()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">葡萄糖</span>
+                <select class="input-field" id="mm-glu" onchange="calcMM()" style="max-width:220px;">
+                  <option value="0">不添加</option>
+                  <option value="0.2" selected>0.2% (2 g/L)</option>
+                  <option value="1.0">1.0% (10 g/L)</option>
+                </select>
+              </div>
+              <div class="result-box" id="mm-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item">
+                  <span class="result-name">K₂HPO₄</span>
+                  <span class="result-value" id="mm-k2hpo4">7.0 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">KH₂PO₄</span>
+                  <span class="result-value" id="mm-kh2po4">2.0 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">(NH₄)₂SO₄</span>
+                  <span class="result-value" id="mm-nh4">1.0 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">柠檬酸钠·2H₂O</span>
+                  <span class="result-value" id="mm-citrate">0.5 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">MgSO₄·7H₂O</span>
+                  <span class="result-value" id="mm-mgso4">0.1 g</span>
+                </div>
+                <div class="result-item" id="mm-glu-row">
+                  <span class="result-name">葡萄糖</span>
+                  <span class="result-value" id="mm-glucose">2.0 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">蒸馏水</span>
+                  <span class="result-value" id="mm-water">1000 mL</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider">配制步骤</div>
+            <ol class="steps">
+              <li>称取所有无机盐组分，溶于约 800 mL 蒸馏水中。</li>
+              <li>调节 pH 至 7.0 ± 0.2（用 1M NaOH 或 1M HCl）。</li>
+              <li>定容至终体积。</li>
+              <li>如需添加葡萄糖，单独配制 20% 葡萄糖母液，0.22 μm 滤膜过滤除菌后按比例加入已灭菌培养基。</li>
+              <li>121°C 高压灭菌 15 min（不含葡萄糖的基础液）。</li>
+              <li>如需添加 12HEA，用 DMSO 溶解母液（10 mM），在超净台中按 10 μM 终浓度加入。</li>
+            </ol>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>葡萄糖不可高压灭菌（会焦糖化产生 Maillard 反应），务必过滤除菌后添加。</li>
+                <li>12HEA 母液（DMSO 溶解）终浓度 DMSO 不超过 0.1%（v/v），同时设含等量 DMSO 的对照。</li>
+                <li>「MM + 0.2% Glu + 10 μM 12HEA」用于检测协同生长效应，务必设置以下对照：
+                  <ul>
+                    <li>MM only（空白）</li>
+                    <li>MM + 0.2% Glu</li>
+                    <li>MM + 10 μM 12HEA（无葡萄糖）</li>
+                    <li>MM + 0.2% Glu + 等量 DMSO</li>
+                  </ul>
+                </li>
+                <li>OD600 测量时用对应培养基作为空白对照。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card" id="card-tsb">
+        <div class="recipe-header" onclick="toggleCard('card-tsb')">
+          <div class="recipe-icon" style="background:rgba(124,58,237,0.1);color:var(--purple);">🧬</div>
+          <div>
+            <div class="recipe-title">1/2 <span id="tsb-title">TSB</span> 培养基</div>
+            <div class="recipe-subtitle" id="tsb-subtitle">Half-Strength Tryptic Soy Broth — 用于 Sphingobium 常规培养</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="media-toggle">
+              <button class="media-toggle-btn active" onclick="event.stopPropagation();toggleMedia('tsb',false)">液体 TSB</button>
+              <button class="media-toggle-btn" onclick="event.stopPropagation();toggleMedia('tsb',true)">固体 TSA</button>
+            </div>
+            <div class="desc">
+              半强度胰蛋白胨大豆培养基，营养丰富，用于 <em>Sphingobium</em> 的常规培养、种子液制备及碳源利用对照实验。液体版 (TSB) 用于振荡培养，固体版 (TSA) 用于平板划线和菌落计数。在 1/2 TSB 中，12HEA 不会额外促进或抑制生长。
+            </div>
+
+            <div class="quick-ref">
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">TSB 粉剂</div>
+                <div class="quick-ref-value">7.5 g/L (半强度)</div>
+              </div>
+              <div class="quick-ref-item" id="tsb-agar-ref" style="display:none;">
+                <div class="quick-ref-label">琼脂添加</div>
+                <div class="quick-ref-value">15 g/L</div>
+              </div>
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">灭菌条件</div>
+                <div class="quick-ref-value">121°C 15min</div>
+              </div>
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">pH</div>
+                <div class="quick-ref-value">7.3 ± 0.2</div>
+              </div>
+            </div>
+
+            <div class="calc-section">
+              <div class="calc-title">用量计算器</div>
+              <div class="formula" id="tsb-formula">TSB粉剂(g) = 7.5 × 体积(L)</div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="tsb-vol" value="1" min="0" step="0.1" oninput="calcTSB()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="result-box" id="tsb-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item">
+                  <span class="result-name">TSB 粉剂</span>
+                  <span class="result-value" id="tsb-powder">7.5 g</span>
+                </div>
+                <div class="result-item" id="tsb-agar-row" style="display:none;">
+                  <span class="result-name">琼脂粉</span>
+                  <span class="result-value" id="tsb-agar">15.0 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">蒸馏水</span>
+                  <span class="result-value" id="tsb-water">1000 mL</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider">配制步骤</div>
+            <ol class="steps">
+              <li>称取 TSB 粉剂<span id="tsb-step-agar">，加入蒸馏水中搅拌溶解</span>。</li>
+              <li>无需调 pH（商品化 TSB 粉剂已缓冲至中性）。</li>
+              <li>分装至三角瓶或试管中。</li>
+              <li>121°C 高压灭菌 15 分钟。</li>
+              <li id="tsb-step-pour" style="display:none;">冷却至约 55°C 后在超净台中倒平板（约 20 mL/皿）。</li>
+              <li>冷却后 4°C 保存，使用前可加入相应碳源或抗生素。</li>
+            </ol>
+
+            <div class="box info">
+              <div class="box-title">💡 使用提示</div>
+              <ul>
+                <li>培养 <em>Sphingobium</em> 时，28-30°C、180-200 rpm 振荡培养过夜（12-16 h）。</li>
+                <li>制备种子液时，从平板挑取单菌落接入 5 mL 1/2 TSB，过夜培养后按 1:100 转接。</li>
+                <li>1/2 TSB 中 12HEA 无额外促进/抑制效果，因此可作为"营养丰富"条件的对照。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card" id="card-lb">
+        <div class="recipe-header" onclick="toggleCard('card-lb')">
+          <div class="recipe-icon" style="background:rgba(8,145,178,0.1);color:var(--cyan);">🔬</div>
+          <div>
+            <div class="recipe-title"><span id="lb-title">LB</span> 培养基</div>
+            <div class="recipe-subtitle" id="lb-subtitle">Luria-Bertani Medium — 通用细菌培养基</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="media-toggle">
+              <button class="media-toggle-btn active" onclick="event.stopPropagation();toggleMedia('lb',false)">液体 LB</button>
+              <button class="media-toggle-btn" onclick="event.stopPropagation();toggleMedia('lb',true)">固体 LBA</button>
+            </div>
+            <div class="desc">
+              LB 培养基是分子生物学中最常用的细菌通用培养基，可用于 <em>Sphingobium</em> 及其他细菌的常规培养与保存。液体版 (LB) 用于振荡培养，固体版 (LBA) 用于平板划线和单菌落分离。
+            </div>
+
+            <table class="comp-table">
+              <thead>
+                <tr>
+                  <th>组分</th>
+                  <th>浓度 (g/L)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>胰蛋白胨 (Tryptone)</td>
+                  <td class="mono">10.0</td>
+                </tr>
+                <tr>
+                  <td>酵母提取物 (Yeast Extract)</td>
+                  <td class="mono">5.0</td>
+                </tr>
+                <tr>
+                  <td>NaCl</td>
+                  <td class="mono">10.0</td>
+                </tr>
+                <tr id="lb-table-agar" style="display:none;">
+                  <td>琼脂粉 (Agar)</td>
+                  <td class="mono">15.0</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="calc-section">
+              <div class="calc-title">用量计算器</div>
+              <div class="formula" id="lb-formula">胰蛋白胨(g) = 10 × 体积(L) &emsp; 酵母(g) = 5 × 体积(L) &emsp; NaCl(g) = 10 × 体积(L)</div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="lb-vol" value="1" min="0" step="0.1" oninput="calcLB()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="result-box" id="lb-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item">
+                  <span class="result-name">胰蛋白胨</span>
+                  <span class="result-value" id="lb-tryp">10.0 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">酵母提取物</span>
+                  <span class="result-value" id="lb-yeast">5.0 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">NaCl</span>
+                  <span class="result-value" id="lb-nacl">10.0 g</span>
+                </div>
+                <div class="result-item" id="lb-agar-row" style="display:none;">
+                  <span class="result-name">琼脂粉</span>
+                  <span class="result-value" id="lb-agar">15.0 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">蒸馏水</span>
+                  <span class="result-value" id="lb-water">1000 mL</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider">配制步骤</div>
+            <ol class="steps">
+              <li>称取各组分，加入蒸馏水中搅拌溶解。</li>
+              <li>用 1M NaOH 调 pH 至 7.0。</li>
+              <li id="lb-step-agar" style="display:none;">加入琼脂粉。</li>
+              <li>121°C 高压灭菌 20 分钟。</li>
+              <li id="lb-step-pour" style="display:none;">冷却至约 55°C 后在超净台中倒平板（约 20 mL/皿）。</li>
+            </ol>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>LB 中 NaCl 浓度较高（10 g/L），部分环境来源的 <em>Sphingobium</em> 对高盐敏感，可考虑使用低盐 LB（NaCl 5 g/L）。</li>
+                <li>添加抗生素时，务必在培养基冷却至 55°C 以下再加入，避免高温降解。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card" id="card-r2a">
+        <div class="recipe-header" onclick="toggleCard('card-r2a')">
+          <div class="recipe-icon" style="background:rgba(22,163,74,0.1);color:var(--green);">🌱</div>
+          <div>
+            <div class="recipe-title"><span id="r2a-title">R2A</span> 培养基</div>
+            <div class="recipe-subtitle" id="r2a-subtitle">Reasoner's 2A Agar — 环境微生物专用低营养培养基</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="media-toggle">
+              <button class="media-toggle-btn active" onclick="event.stopPropagation();toggleMedia('r2a',false)">液体 R2A</button>
+              <button class="media-toggle-btn" onclick="event.stopPropagation();toggleMedia('r2a',true)">固体 R2A</button>
+            </div>
+            <div class="desc">
+              Reasoner's 2A 培养基是专为环境微生物（水源、土壤、叶际）设计的低营养培养基。相比 LB，R2A 营养成分更低、碳源更丰富多样，有利于恢复受损的环境细菌，特别适合 <em>Sphingobium</em> 等叶际/根际来源细菌的计数和培养。
+            </div>
+
+            <table class="comp-table">
+              <thead>
+                <tr>
+                  <th>组分</th>
+                  <th>浓度 (g/L)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>酵母提取物 (Yeast Extract)</td><td class="mono">0.5</td></tr>
+                <tr><td>蛋白胨 (Peptone)</td><td class="mono">0.5</td></tr>
+                <tr><td>酪蛋白氨基酸 (Casamino Acids)</td><td class="mono">0.5</td></tr>
+                <tr><td>葡萄糖 (Glucose)</td><td class="mono">0.5</td></tr>
+                <tr><td>可溶性淀粉 (Soluble Starch)</td><td class="mono">0.5</td></tr>
+                <tr><td>丙酮酸钠 (Sodium Pyruvate)</td><td class="mono">0.3</td></tr>
+                <tr><td>K₂HPO₄</td><td class="mono">0.3</td></tr>
+                <tr><td>MgSO₄</td><td class="mono">0.05</td></tr>
+                <tr id="r2a-table-agar" style="display:none;"><td>琼脂粉 (Agar)</td><td class="mono">15.0</td></tr>
+              </tbody>
+            </table>
+
+            <div class="calc-section">
+              <div class="calc-title">用量计算器</div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="r2a-vol" value="1" min="0" step="0.1" oninput="calcR2A()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="result-box" id="r2a-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item"><span class="result-name">酵母提取物</span><span class="result-value" id="r2a-yeast">0.5 g</span></div>
+                <div class="result-item"><span class="result-name">蛋白胨</span><span class="result-value" id="r2a-peptone">0.5 g</span></div>
+                <div class="result-item"><span class="result-name">酪蛋白氨基酸</span><span class="result-value" id="r2a-casamino">0.5 g</span></div>
+                <div class="result-item"><span class="result-name">葡萄糖</span><span class="result-value" id="r2a-glucose">0.5 g</span></div>
+                <div class="result-item"><span class="result-name">可溶性淀粉</span><span class="result-value" id="r2a-starch">0.5 g</span></div>
+                <div class="result-item"><span class="result-name">丙酮酸钠</span><span class="result-value" id="r2a-pyruvate">0.3 g</span></div>
+                <div class="result-item"><span class="result-name">K₂HPO₄</span><span class="result-value" id="r2a-k2hpo4">0.3 g</span></div>
+                <div class="result-item"><span class="result-name">MgSO₄</span><span class="result-value" id="r2a-mgso4">0.05 g</span></div>
+                <div class="result-item" id="r2a-agar-row" style="display:none;"><span class="result-name">琼脂粉</span><span class="result-value" id="r2a-agar">15.0 g</span></div>
+                <div class="result-item"><span class="result-name">蒸馏水</span><span class="result-value" id="r2a-water">1000 mL</span></div>
+              </div>
+            </div>
+
+            <div class="divider">配制步骤</div>
+            <ol class="steps">
+              <li>称取所有组分，加入约 800 mL 蒸馏水中，搅拌溶解。</li>
+              <li>可溶性淀粉需先用少量冷水调成糊状再加入热水中溶解。</li>
+              <li>调节 pH 至 7.2 ± 0.2。</li>
+              <li>定容至终体积。</li>
+              <li>121°C 高压灭菌 15 分钟。</li>
+              <li id="r2a-step-pour" style="display:none;">冷却至约 55°C 后在超净台中倒平板（约 20 mL/皿）。</li>
+              <li>4°C 倒置保存备用。</li>
+            </ol>
+
+            <div class="box info">
+              <div class="box-title">💡 使用提示</div>
+              <ul>
+                <li>R2A 是 <strong>低营养</strong> 培养基，菌落生长较慢（通常需 3-5 d），培养温度建议 25-28°C。</li>
+                <li>特别适合从环境样本（叶面、根际、水源）中分离和计数细菌，比 LB 能恢复更多种类。</li>
+                <li>可溶性淀粉不易溶解，建议先用少量冷水调成糊状，再加入温水中搅拌。</li>
+                <li>R2A 也常用于饮用水微生物检测（Standard Methods 9215）。</li>
+              </ul>
+            </div>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>R2A 中碳源种类多但浓度低，灭菌后培养基颜色较浅属正常。</li>
+                <li>丙酮酸钠在高温下可能部分分解，灭菌时间不宜过长。</li>
+                <li>固体 R2A 平板在 4°C 保存不宜超过 2 周（低营养培养基更容易失水）。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KB 培养基 -->
+      <div class="recipe-card" id="card-kb">
+        <div class="recipe-header" onclick="toggleCard('card-kb')">
+          <div class="recipe-icon" style="background:rgba(124,58,237,0.1);color:var(--purple);">🫧</div>
+          <div>
+            <div class="recipe-title"><span id="kb-title">KB</span> 培养基</div>
+            <div class="recipe-subtitle" id="kb-subtitle">King's B Medium — 假单胞菌及植物相关细菌培养</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="media-toggle">
+              <button class="media-toggle-btn active" onclick="event.stopPropagation();toggleMedia('kb',false)">液体 KB</button>
+              <button class="media-toggle-btn" onclick="event.stopPropagation();toggleMedia('kb',true)">固体 KB</button>
+            </div>
+            <div class="desc">
+              King's B 培养基是培养假单胞菌属（<em>Pseudomonas</em>）的经典培养基，也适用于 <em>Sphingobium</em> 等环境细菌。富含有机氮源和甘油碳源，能促进荧光色素产生。常用于生防菌筛选和根际微生物培养。
+            </div>
+
+            <table class="comp-table">
+              <thead><tr><th>组分</th><th>浓度 (g/L)</th></tr></thead>
+              <tbody>
+                <tr><td>Proteose Peptone No.3（蛋白胨）</td><td class="mono">20.0</td></tr>
+                <tr><td>甘油 (Glycerol)</td><td class="mono">10 mL/L</td></tr>
+                <tr><td>K₂HPO₄</td><td class="mono">1.5</td></tr>
+                <tr><td>MgSO₄·7H₂O</td><td class="mono">1.5</td></tr>
+                <tr id="kb-table-agar" style="display:none;"><td>琼脂粉 (Agar)</td><td class="mono">15.0</td></tr>
+              </tbody>
+            </table>
+
+            <div class="calc-section">
+              <div class="calc-title">用量计算器</div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="kb-vol" value="1" min="0" step="0.1" oninput="calcKB()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="result-box" id="kb-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item"><span class="result-name">蛋白胨</span><span class="result-value" id="kb-peptone">20.0 g</span></div>
+                <div class="result-item"><span class="result-name">甘油</span><span class="result-value" id="kb-glycerol">10.0 mL</span></div>
+                <div class="result-item"><span class="result-name">K₂HPO₄</span><span class="result-value" id="kb-k2hpo4">1.5 g</span></div>
+                <div class="result-item"><span class="result-name">MgSO₄·7H₂O</span><span class="result-value" id="kb-mgso4">1.5 g</span></div>
+                <div class="result-item" id="kb-agar-row" style="display:none;"><span class="result-name">琼脂粉</span><span class="result-value" id="kb-agar">15.0 g</span></div>
+                <div class="result-item"><span class="result-name">蒸馏水</span><span class="result-value" id="kb-water">1000 mL</span></div>
+              </div>
+            </div>
+
+            <div class="divider">配制步骤</div>
+            <ol class="steps">
+              <li>称取蛋白胨、K₂HPO₄、MgSO₄·7H₂O，加入约 800 mL 蒸馏水中搅拌溶解。</li>
+              <li>加入甘油，混匀。</li>
+              <li>调节 pH 至 7.2（用 1M NaOH）。</li>
+              <li>定容至终体积。</li>
+              <li>121°C 高压灭菌 15 min。</li>
+              <li id="kb-step-pour" style="display:none;">冷却至约 55°C 后倒平板。</li>
+            </ol>
+
+            <div class="box info">
+              <div class="box-title">💡 使用提示</div>
+              <ul>
+                <li>KB 培养基上假单胞菌常产生蓝绿色荧光色素（pyoverdine），在紫外灯下可见。</li>
+                <li>甘油浓度可调节（5-10 mL/L），高甘油促进某些次级代谢产物产生。</li>
+                <li>如无 Proteose Peptone No.3，可用胰蛋白胨替代，但效果略差。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1/2 MS 培养基 -->
+      <div class="recipe-card" id="card-ms">
+        <div class="recipe-header" onclick="toggleCard('card-ms')">
+          <div class="recipe-icon" style="background:rgba(22,163,74,0.1);color:var(--green);">🌿</div>
+          <div>
+            <div class="recipe-title">1/2 <span id="ms-title">MS</span> 培养基</div>
+            <div class="recipe-subtitle" id="ms-subtitle">Half-Strength Murashige &amp; Skoog — 植物组织培养与种子萌发</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="media-toggle">
+              <button class="media-toggle-btn active" onclick="event.stopPropagation();toggleMedia('ms',false)">液体 MS</button>
+              <button class="media-toggle-btn" onclick="event.stopPropagation();toggleMedia('ms',true)">固体 MS</button>
+            </div>
+            <div class="desc">
+              1/2 MS 是植物生物学中最常用的培养基，适用于种子萌发、愈伤组织诱导和组培。半强度无机盐浓度更适合玉米等作物的种子萌发和幼苗生长。用于无菌种子萌发时可不加蔗糖和琼脂（水培法）。
+            </div>
+
+            <table class="comp-table">
+              <thead><tr><th>组分</th><th>浓度</th></tr></thead>
+              <tbody>
+                <tr><td>MS 大量+微量元素盐粉（商品化）</td><td class="mono">2.15 g/L (半强度)</td></tr>
+                <tr><td>蔗糖 (Sucrose)</td><td class="mono">15 g/L</td></tr>
+                <tr id="ms-table-agar" style="display:none;"><td>琼脂粉 (Agar)</td><td class="mono">8 g/L</td></tr>
+              </tbody>
+            </table>
+
+            <div class="calc-section">
+              <div class="calc-title">用量计算器</div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="ms-vol" value="1" min="0" step="0.1" oninput="calcMS()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="result-box" id="ms-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item"><span class="result-name">MS 盐粉（半强度）</span><span class="result-value" id="ms-salt">2.15 g</span></div>
+                <div class="result-item"><span class="result-name">蔗糖</span><span class="result-value" id="ms-sucrose">15.0 g</span></div>
+                <div class="result-item" id="ms-agar-row" style="display:none;"><span class="result-name">琼脂粉</span><span class="result-value" id="ms-agar">8.0 g</span></div>
+                <div class="result-item"><span class="result-name">蒸馏水</span><span class="result-value" id="ms-water">1000 mL</span></div>
+              </div>
+            </div>
+
+            <div class="divider">配制步骤</div>
+            <ol class="steps">
+              <li>称取 MS 盐粉，加入约 800 mL 蒸馏水中搅拌溶解。</li>
+              <li>加入蔗糖，搅拌至完全溶解。</li>
+              <li>用 1M KOH 调节 pH 至 5.7-5.8。</li>
+              <li>定容至终体积。</li>
+              <li id="ms-step-agar" style="display:none;">加入琼脂粉。</li>
+              <li>121°C 高压灭菌 15 min。</li>
+              <li id="ms-step-pour" style="display:none;">冷却至约 55°C 后倒平板或分装至培养瓶。</li>
+            </ol>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>pH 必须调至 5.7-5.8，过高会导致铁沉淀，过低影响植物生长。</li>
+                <li>MS 盐粉有全强度（4.3 g/L）和半强度（2.15 g/L）两种用法，根据实验需求选择。</li>
+                <li>用于无菌种子萌发：可不加蔗糖和琼脂，直接配成液体 1/2 MS，种子表面消毒后置于湿润滤纸上萌发。</li>
+                <li>植物激素（如 IAA、6-BA）需过滤除菌后单独添加，不可高压灭菌。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- V8 培养基 -->
+      <div class="recipe-card" id="card-v8">
+        <div class="recipe-header" onclick="toggleCard('card-v8')">
+          <div class="recipe-icon" style="background:rgba(220,38,38,0.1);color:var(--red);">🍅</div>
+          <div>
+            <div class="recipe-title"><span id="v8-title">V8</span> 培养基</div>
+            <div class="recipe-subtitle" id="v8-subtitle">V8 Juice Agar — 卵菌和真菌培养基</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="media-toggle">
+              <button class="media-toggle-btn active" onclick="event.stopPropagation();toggleMedia('v8',false)">液体 V8</button>
+              <button class="media-toggle-btn" onclick="event.stopPropagation();toggleMedia('v8',true)">固体 V8</button>
+            </div>
+            <div class="desc">
+              V8 培养基以 V8 蔬菜汁为基质（含番茄、胡萝卜、西洋菜、生菜、西芹、菠菜、甜菜根、芹菜 8 种蔬菜），是培养卵菌（<em>Phytophthora</em>、<em>Pythium</em>）和某些真菌的经典培养基。CaCO₃ 用于中和培养过程中产生的酸。<em>Bipolaris maydis</em> 也可在 V8 上培养和产孢。
+            </div>
+
+            <div class="box info">
+              <div class="box-title">💡 两种配制方式</div>
+              <ul>
+                <li><strong>商品化 2× 母液法（推荐）</strong>：如 Coolaber MM7051，2× 溶液已包含 V8 汁和 CaCO₃，直接 1:1 稀释即可，无需额外称量。</li>
+                <li><strong>自配法</strong>：自行混合 V8 汁 + CaCO₃ + 水，适合无商品化产品时使用。</li>
+              </ul>
+            </div>
+
+            <div class="divider">方式一：商品化 2× 母液法（如 MM7051）</div>
+            <div class="calc-section">
+              <div class="calc-title">2× 母液稀释计算器</div>
+              <div class="formula">2× 母液量 = 目标体积 / 2 &emsp; ddH₂O 量 = 目标体积 / 2</div>
+              <div class="input-row">
+                <span class="input-label">目标体积</span>
+                <input type="number" class="input-field" id="v8-vol" value="1" min="0" step="0.1" oninput="calcV8()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="result-box" id="v8-result">
+                <div class="result-title">▸ 用量清单</div>
+                <div class="result-item"><span class="result-name">2× V8 母液（含 V8 汁 + CaCO₃）</span><span class="result-value" id="v8-stock">500 mL</span></div>
+                <div class="result-item" id="v8-agar-row" style="display:none;"><span class="result-name">琼脂粉（加入水相）</span><span class="result-value" id="v8-agar">15.0 g</span></div>
+                <div class="result-item"><span class="result-name">ddH₂O</span><span class="result-value" id="v8-water">500 mL</span></div>
+              </div>
+            </div>
+            <ol class="steps">
+              <li id="v8-agar-step-1" style="display:none;">取一半体积的蒸馏水，加入琼脂粉，121°C 高压灭菌 15 min。</li>
+              <li id="v8-agar-step-2" style="display:none;">2× V8 母液 50-60°C 水浴 30 min（使 CaCO₃ 均匀分散）。</li>
+              <li id="v8-agar-step-3" style="display:none;">将灭菌琼脂液与 2× V8 母液混合均匀，及时倒平板。</li>
+              <li id="v8-liq-step" style="">取等体积的 2× V8 母液和无菌水，混合均匀即可。</li>
+            </ol>
+
+            <div class="divider">方式二：自配法</div>
+            <table class="comp-table">
+              <thead><tr><th>组分</th><th>终浓度 (g/L)</th><th>备注</th></tr></thead>
+              <tbody>
+                <tr><td>V8 蔬菜汁</td><td class="mono">200 mL/L</td><td>即 20% (v/v)，可先离心去沉淀</td></tr>
+                <tr><td>CaCO₃</td><td class="mono">3.0 g/L</td><td>白色沉淀，使用前混匀</td></tr>
+                <tr id="v8-table-agar" style="display:none;"><td>琼脂粉 (Agar)</td><td class="mono">15.0 g/L</td><td>固体培养基用</td></tr>
+              </tbody>
+            </table>
+
+            <div class="calc-section">
+              <div class="calc-title">自配法计算器</div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="v8-diy-vol" value="1" min="0" step="0.1" oninput="calcV8diy()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="result-box" id="v8-diy-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item"><span class="result-name">V8 蔬菜汁</span><span class="result-value" id="v8-diy-juice">200 mL</span></div>
+                <div class="result-item"><span class="result-name">CaCO₃</span><span class="result-value" id="v8-diy-caco3">3.0 g</span></div>
+                <div class="result-item" id="v8-diy-agar-row" style="display:none;"><span class="result-name">琼脂粉</span><span class="result-value" id="v8-diy-agar">15.0 g</span></div>
+                <div class="result-item"><span class="result-name">蒸馏水</span><span class="result-value" id="v8-diy-water">800 mL</span></div>
+              </div>
+            </div>
+            <ol class="steps">
+              <li>量取 V8 蔬菜汁 200 mL，加入 CaCO₃ 3.0 g，搅拌混匀（会起泡，属正常反应）。</li>
+              <li>加入蒸馏水至终体积 1 L。</li>
+              <li><strong>不必调节 pH</strong>，使用自然 pH。</li>
+              <li id="v8-diy-step-agar" style="display:none;">加入琼脂粉。</li>
+              <li>121°C 高压灭菌 15 min。</li>
+              <li id="v8-diy-step-pour" style="display:none;">冷却至约 55°C 后倒平板。CaCO₃ 为白色沉淀，倒板前轻轻摇匀。</li>
+            </ol>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li><strong>不要调节 pH</strong>，使用自然 pH。CaCO₃ 起缓冲作用，会在培养过程中持续中和酸。</li>
+                <li>CaCO₃ 是白色不溶物，灭菌后会沉淀，倒板前需轻轻摇匀。</li>
+                <li>2× 母液 4°C 保存，1 年有效。开封后注意无菌保存。</li>
+                <li>自配时 V8 汁可先离心（3000 rpm, 10 min）去除大颗粒沉淀，取上清使用。</li>
+              </ul>
+            </div>
+
+            <div class="box info">
+              <div class="box-title">💡 应用提示</div>
+              <ul>
+                <li>用于 <em>Bm</em> 产孢：V8 培养基上 25°C 培养 7-10 d，12h 光暗交替促进产孢。</li>
+                <li>低稀释 V8（50 mL/L V8 汁）可用于诱导卵菌产生孢子囊。</li>
+                <li>可调节 V8 汁浓度（100-200 mL/L）以控制营养强度。</li>
+                <li>番茄汁可替代 V8 汁，配方类似。</li>
+              </ul>
+            </div>
+
+            <div class="box info" style="margin-bottom:1rem;">
+              <div class="box-title">💡 商品化 2× 母液（如 Coolaber MM7051）</div>
+              <ul>
+                <li>MM7051 为 <strong>2× 浓缩液</strong>，已包含 V8 汁 + CaCO₃，4°C 保存，1 年有效。</li>
+                <li><strong>液体培养基</strong>：取 500 mL 2× V8 溶液 + 500 mL 无菌蒸馏水，混匀即为 1× 工作液。</li>
+                <li><strong>固体培养基</strong>：取 500 mL 蒸馏水 + 20 g 琼脂粉，121°C 灭菌 15 min；另取 500 mL 2× V8 溶液 50-60°C 水浴 30 min；两者混合后倒平板。</li>
+                <li>使用前轻轻摇匀，CaCO₃ 为白色沉淀属正常现象。</li>
+                <li><strong>无需额外添加 CaCO₃ 或调节 pH。</strong></li>
+              </ul>
+            </div>
+
+            <div class="divider">自配 V8 培养基配方（1× 工作液）</div>
+
+            <table class="comp-table">
+              <thead><tr><th>组分</th><th>浓度</th><th>备注</th></tr></thead>
+              <tbody>
+                <tr><td>V8 蔬菜汁</td><td class="mono">200 mL/L</td><td>即 20% (v/v)</td></tr>
+                <tr><td>CaCO₃</td><td class="mono">3.0 g/L</td><td>白色沉淀，使用前混匀</td></tr>
+                <tr id="v8-table-agar" style="display:none;"><td>琼脂粉 (Agar)</td><td class="mono">15.0 g/L</td><td>固体培养基用</td></tr>
+              </tbody>
+            </table>
+
+            <div class="calc-section">
+              <div class="calc-title">自配用量计算器</div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="v8-vol" value="1" min="0" step="0.1" oninput="calcV8()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="result-box" id="v8-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item"><span class="result-name">V8 蔬菜汁</span><span class="result-value" id="v8-juice">200 mL</span></div>
+                <div class="result-item"><span class="result-name">CaCO₃</span><span class="result-value" id="v8-caco3">3.0 g</span></div>
+                <div class="result-item" id="v8-agar-row" style="display:none;"><span class="result-name">琼脂粉</span><span class="result-value" id="v8-agar">15.0 g</span></div>
+                <div class="result-item"><span class="result-name">蒸馏水</span><span class="result-value" id="v8-water">800 mL</span></div>
+              </div>
+            </div>
+
+            <div class="divider">自配步骤</div>
+            <ol class="steps">
+              <li>量取 V8 蔬菜汁 200 mL，加入 CaCO₃ 3.0 g，搅拌混匀（会起泡，属正常反应）。</li>
+              <li>加入蒸馏水至终体积 1 L。</li>
+              <li><strong>不必调节 pH</strong>，使用自然 pH（CaCO₃ 起缓冲作用）。</li>
+              <li id="v8-step-agar" style="display:none;">加入琼脂粉 15 g。</li>
+              <li>121°C 高压灭菌 15 min。</li>
+              <li id="v8-step-pour" style="display:none;">冷却至约 55°C 后倒平板。CaCO₃ 为白色沉淀，倒板前轻轻摇匀。</li>
+            </ol>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li><strong>不要调节 pH</strong>，使用自然 pH。CaCO₃ 起缓冲作用，会在培养过程中持续中和酸。</li>
+                <li>CaCO₃ 是白色不溶物，灭菌后会沉淀，倒板前需轻轻摇匀。</li>
+                <li>V8 汁如自行配制，建议先离心（3000 rpm, 10 min）去除大颗粒沉淀，取上清使用。</li>
+                <li>用于 <em>Bm</em> 产孢：V8 培养基上 25°C 培养 7-10 d，12h 光暗交替促进产孢。</li>
+              </ul>
+            </div>
+
+            <div class="box info">
+              <div class="box-title">💡 使用提示</div>
+              <ul>
+                <li>低稀释 V8（50 mL/L V8 汁）可用于诱导卵菌产生孢子囊。</li>
+                <li>可调节 V8 汁浓度（100-200 mL/L）以控制营养强度。</li>
+                <li>番茄汁可替代 V8 汁，配方类似。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10 mM MgCl₂ 缓冲液 -->
+      <div class="recipe-card" id="card-mgcl2">
+        <div class="recipe-header" onclick="toggleCard('card-mgcl2')">
+          <div class="recipe-icon" style="background:rgba(8,145,178,0.1);color:var(--cyan);">💧</div>
+          <div>
+            <div class="recipe-title">10 mM MgCl₂ 缓冲液</div>
+            <div class="recipe-subtitle">氯化镁溶液 — 孢子悬浮液配制与稀释</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              10 mM MgCl₂ 是配制真菌孢子悬浮液的常用缓冲液，相比纯水能更好地维持孢子活力和渗透压平衡。用于 <em>Bipolaris maydis</em> 分生孢子悬浮液的配制和梯度稀释。
+            </div>
+
+            <div class="quick-ref">
+              <div class="quick-ref-item"><div class="quick-ref-label">工作浓度</div><div class="quick-ref-value">10 mM</div></div>
+              <div class="quick-ref-item"><div class="quick-ref-label">MgCl₂·6H₂O MW</div><div class="quick-ref-value">203.30</div></div>
+              <div class="quick-ref-item"><div class="quick-ref-label">每升称量</div><div class="quick-ref-value">2.033 g</div></div>
+              <div class="quick-ref-item"><div class="quick-ref-label">灭菌方式</div><div class="quick-ref-value">121°C 15min</div></div>
+            </div>
+
+            <div class="calc-section">
+              <div class="calc-title">用量计算器</div>
+              <div class="formula">MgCl₂·6H₂O (g) = 2.033 × 体积(L)</div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="mgcl2-vol" value="1" min="0" step="0.1" oninput="calcMgCl2()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="result-box" id="mgcl2-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item"><span class="result-name">MgCl₂·6H₂O</span><span class="result-value" id="mgcl2-powder">2.033 g</span></div>
+                <div class="result-item"><span class="result-name">蒸馏水</span><span class="result-value" id="mgcl2-water">1000 mL</span></div>
+              </div>
+            </div>
+
+            <div class="divider">配制步骤</div>
+            <ol class="steps">
+              <li>称取 MgCl₂·6H₂O，加入蒸馏水中搅拌溶解。</li>
+              <li>定容至终体积。</li>
+              <li>121°C 高压灭菌 15 min，或 0.22 μm 滤膜过滤除菌。</li>
+              <li>室温保存，使用前检查无沉淀。</li>
+            </ol>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>MgCl₂·6H₂O 易潮解，开瓶后尽快使用，称量时动作要快。</li>
+                <li>配制孢子悬浮液时，加入 0.05% Tween-20 助悬效果更好。</li>
+                <li>也可用无菌水代替 MgCl₂ 配制孢子液，但 MgCl₂ 能更好维持孢子活力。</li>
+                <li>10 mM MgCl₂ 渗透压接近生理条件，适合短期保存孢子。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== 消毒试剂 ==================== -->
+    <div class="panel" id="panel-disinfection">
+
+      <div class="recipe-card open" id="card-hgcl2">
+        <div class="recipe-header" onclick="toggleCard('card-hgcl2')">
+          <div class="recipe-icon" style="background:rgba(220,38,38,0.1);color:var(--red);">☠️</div>
+          <div>
+            <div class="recipe-title">0.1% HgCl₂ 消毒液</div>
+            <div class="recipe-subtitle">氯化汞溶液 — 种子表面消毒</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              用于玉米种子表面消毒。Protocol: 0.1% HgCl₂ 浸泡消毒后无菌水冲洗，预萌发 2 d 后进行细菌接种。HgCl₂ 是强效消毒剂，对大多数微生物有杀灭作用。
+            </div>
+
+            <div class="quick-ref">
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">工作浓度</div>
+                <div class="quick-ref-value">0.1% (w/v)</div>
+              </div>
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">MW</div>
+                <div class="quick-ref-value">271.52</div>
+              </div>
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">摩尔浓度</div>
+                <div class="quick-ref-value">~3.68 mM</div>
+              </div>
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">GHS 危险</div>
+                <div class="quick-ref-value" style="color:var(--red);font-weight:600;">急性毒性+水生毒性</div>
+              </div>
+            </div>
+
+            <div class="calc-section">
+              <div class="calc-title">用量计算器</div>
+              <div class="formula">HgCl₂ (g) = 1.0 × 体积(L)&emsp;&emsp;即 1 g/L</div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="hg-vol" value="0.5" min="0" step="0.1" oninput="calcHgCl2()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="result-box" id="hg-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item">
+                  <span class="result-name">HgCl₂</span>
+                  <span class="result-value" id="hg-powder">0.500 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">蒸馏水</span>
+                  <span class="result-value" id="hg-water">500 mL</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider">配制步骤</div>
+            <ol class="steps">
+              <li>在通风橱中操作，佩戴双层手套和护目镜。</li>
+              <li>称取 HgCl₂ 粉末，加入蒸馏水中搅拌至完全溶解。</li>
+              <li>转移至试剂瓶中，贴好标签（含剧毒标识）。</li>
+              <li>室温保存，使用时倒入培养皿或烧杯中浸泡种子。</li>
+              <li>消毒后种子用无菌水冲洗 3-5 次，去除残留 HgCl₂。</li>
+            </ol>
+
+            <div class="box danger">
+              <div class="box-title">🔴 安全警告</div>
+              <ul>
+                <li><strong>HgCl₂ 有剧毒！</strong> LD50 (大鼠经口) = 1-2 mg/kg。操作时必须在通风橱中进行。</li>
+                <li>必须佩戴：耐化学手套（丁腈或氯丁橡胶）、护目镜、实验服。建议双层手套。</li>
+                <li>避免皮肤接触、吸入粉尘或误食。如接触皮肤，立即用大量水冲洗并就医。</li>
+                <li><strong>废液处理</strong>：含汞废液不可直接倒入下水道！需收集至专用废液桶，交由有资质的危废处理公司处置。</li>
+                <li>称量时使用称量纸或称量舟，避免直接接触天平。称量后清洁天平区域。</li>
+                <li>误触或溅出时，用硫粉覆盖后收集，按危废处理。</li>
+              </ul>
+            </div>
+
+            <div class="box info">
+              <div class="box-title">💡 替代方案建议</div>
+              <ul>
+                <li>如实验室安全条件不允许使用 HgCl₂，可考虑以下替代方案：
+                  <ul>
+                    <li><strong>1% NaClO（次氯酸钠）</strong>：浸泡 5-10 min，效果略弱但安全性更高</li>
+                    <li><strong>75% 乙醇</strong>：浸泡 1-2 min，然后 2-3% NaClO 浸泡 10-15 min</li>
+                    <li><strong>0.1% HgCl₂</strong> 仍是种子消毒的"金标准"，灭菌最彻底</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card" id="card-naclo">
+        <div class="recipe-header" onclick="toggleCard('card-naclo')">
+          <div class="recipe-icon" style="background:rgba(8,145,178,0.1);color:var(--cyan);">🧴</div>
+          <div>
+            <div class="recipe-title">NaClO 消毒液</div>
+            <div class="recipe-subtitle">次氯酸钠溶液 — 器械/表面消毒</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              次氯酸钠（NaClO）是实验室常用的表面消毒剂。商品 84 消毒液通常含 5% NaClO，需稀释后使用。用于超净台表面擦拭、器皿消毒等。
+            </div>
+
+            <div class="calc-section">
+              <div class="calc-title">稀释计算器</div>
+              <div class="formula">原液量(mL) = 目标浓度(%) × 目标体积(mL) / 原液浓度(%)</div>
+              <div class="input-row">
+                <span class="input-label">原液浓度</span>
+                <input type="number" class="input-field" id="naclo-stock" value="5" min="0" step="0.5" oninput="calcNaClO()" />
+                <span class="input-unit">%</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">目标浓度</span>
+                <input type="number" class="input-field" id="naclo-target" value="0.5" min="0" step="0.1" oninput="calcNaClO()" />
+                <span class="input-unit">%</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">目标体积</span>
+                <input type="number" class="input-field" id="naclo-vol" value="500" min="0" step="10" oninput="calcNaClO()" />
+                <span class="input-unit">mL</span>
+              </div>
+              <div class="result-box" id="naclo-result">
+                <div class="result-title">▸ 稀释方案</div>
+                <div class="result-item">
+                  <span class="result-name">取原液</span>
+                  <span class="result-value" id="naclo-stock-vol">50.0 mL</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">加水至</span>
+                  <span class="result-value" id="naclo-water-vol">500 mL</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>NaClO 不稳定，开瓶后有效氯含量会逐渐下降，建议每 3 个月更换。</li>
+                <li>不可与酸混合（会产生有毒氯气）。</li>
+                <li>现配现用效果最佳，稀释液不宜长期存放。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 菌悬液制备 ==================== -->
+    <div class="panel" id="panel-suspension">
+
+      <div class="recipe-card open" id="card-bm-spore">
+        <div class="recipe-header" onclick="toggleCard('card-bm-spore')">
+          <div class="recipe-icon" style="background:rgba(180,83,9,0.1);color:var(--yellow);">🍄</div>
+          <div>
+            <div class="recipe-title">Bm 分生孢子悬浮液</div>
+            <div class="recipe-subtitle">Bipolaris maydis 接种体 — 2×10⁵ conidia/mL</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              用于喷雾接种玉米幼苗（14 d）。从 PDA 培养基上培养 7-10 d 的 Bm 菌落收集分生孢子，调节浓度至 2×10⁵ conidia/mL。
+            </div>
+
+            <div class="calc-section">
+              <div class="calc-title">浓度调节计算器</div>
+              <div class="formula">所需原液量(mL) = 目标浓度 × 目标体积 / 原液浓度</div>
+              <div class="input-row">
+                <span class="input-label">目标浓度</span>
+                <input type="number" class="input-field" id="bm-target" value="200000" min="0" step="10000" oninput="calcBmSpore()" />
+                <span class="input-unit">/mL</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">目标体积</span>
+                <input type="number" class="input-field" id="bm-vol" value="100" min="0" step="10" oninput="calcBmSpore()" />
+                <span class="input-unit">mL</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">原液浓度</span>
+                <input type="number" class="input-field" id="bm-stock" value="1000000" min="0" step="100000" oninput="calcBmSpore()" />
+                <span class="input-unit">/mL</span>
+              </div>
+              <div class="result-box" id="bm-result">
+                <div class="result-title">▸ 稀释方案</div>
+                <div class="result-item">
+                  <span class="result-name">取原液</span>
+                  <span class="result-value" id="bm-stock-vol">20.0 mL</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">加水/缓冲液至</span>
+                  <span class="result-value" id="bm-water-vol">100 mL</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider">制备步骤</div>
+            <ol class="steps">
+              <li>Bm 在 PDA 上 25°C 培养 7-10 d（12h 光暗交替促进产孢）。</li>
+              <li>加入适量无菌水（含 0.05% Tween-20），用涂布棒或刮勺轻柔刮下孢子。</li>
+              <li>用两层灭菌纱布或 Miracloth 过滤去除菌丝碎片。</li>
+              <li>血球计数板（Neubauer chamber）在显微镜下计数。</li>
+              <li>根据计数结果，用无菌水稀释至 2×10⁵ conidia/mL。</li>
+              <li>使用前再次混匀，确保孢子均匀悬浮。</li>
+            </ol>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>新鲜制备的孢子悬浮液萌发率最高，建议现配现用，放置不超过 2 h。</li>
+                <li>计数时注意区分完整孢子与碎片，Bm 分生孢子为纺锤形、多细胞（通常 3-5 个细胞）。</li>
+                <li>添加 0.05% Tween-20 作为表面活性剂，有助于孢子在叶面均匀附着。</li>
+                <li>喷雾接种时使用小型喷雾器，均匀喷施至叶片表面微微滴水为宜。</li>
+                <li>对照组喷施等量无菌水 + 0.05% Tween-20。</li>
+              </ul>
+            </div>
+
+            <div class="box info">
+              <div class="box-title">💡 产孢质量检查</div>
+              <ul>
+                <li>取 10 μL 孢子悬液滴于载玻片，显微镜下检查形态完整性。</li>
+                <li>可做萌发实验：将孢子悬液滴在水琼脂上，25°C 培养 6-8 h，萌发率应 > 80%。</li>
+                <li>若萌发率低，考虑更换菌株传代批次或调整培养条件。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card" id="card-bac-susp">
+        <div class="recipe-header" onclick="toggleCard('card-bac-susp')">
+          <div class="recipe-icon" style="background:rgba(22,163,74,0.1);color:var(--green);">🦠</div>
+          <div>
+            <div class="recipe-title">细菌接种悬浮液</div>
+            <div class="recipe-subtitle">Sphingobium OD600=0.5 — 用于滚转接种</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              制备 OD600=0.5 的 <em>Sphingobium</em> 悬浮液，用于玉米种子滚转接种。Protocol: 种子预萌发 2 d 后在菌液中滚转 1 h。
+            </div>
+
+            <div class="quick-ref">
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">目标 OD600</div>
+                <div class="quick-ref-value">0.5</div>
+              </div>
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">接种方式</div>
+                <div class="quick-ref-value">滚转 1 h</div>
+              </div>
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">培养基</div>
+                <div class="quick-ref-value">1/2 TSB 或无菌水</div>
+              </div>
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">对应约菌密度</div>
+                <div class="quick-ref-value">~1×10⁸ CFU/mL</div>
+              </div>
+            </div>
+
+            <div class="divider">制备步骤</div>
+            <ol class="steps">
+              <li>从 -80°C 甘油保种管或新鲜平板上挑取 <em>Sphingobium</em> 单菌落，接入 5 mL 1/2 TSB。</li>
+              <li>28-30°C、180 rpm 振荡培养过夜（12-16 h）。</li>
+              <li>取过夜培养物，用新鲜 1/2 TSB 或无菌水稀释。</li>
+              <li>用分光光度计测定 OD600，逐步稀释至 OD600=0.5。</li>
+              <li>若用于种子滚转接种：将预萌发 2 d 的玉米种子放入菌液中，28°C、100 rpm 振荡 1 h。</li>
+              <li>取出种子，无菌滤纸吸去多余液体，播种至无菌营养土。</li>
+            </ol>
+
+            <div class="box success">
+              <div class="box-title">✅ OD600 稀释技巧</div>
+              <ul>
+                <li>先测过夜培养物的 OD600（通常为 1.0-4.0），然后按比例稀释。</li>
+                <li>稀释倍数 = 过夜 OD600 / 0.5。例如 OD600=2.0，取 1 mL 菌液 + 3 mL 稀释液。</li>
+                <li>建议稀释后再次测量确认 OD600=0.5。</li>
+                <li>以无菌水或 1/2 TSB 作为空白对照。</li>
+              </ul>
+            </div>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>设置未接种对照（无菌水代替菌液），每处理至少 10-15 粒种子。</li>
+                <li>不同菌株生长速率可能不同，过夜培养物的 OD600 可能差异较大，需分别调节。</li>
+                <li>37 株菌分别制备时，注意标记清楚菌株编号，避免交叉污染。</li>
+                <li>制备好的菌悬液应立即使用，不宜长时间放置。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 代谢物处理 ==================== -->
+    <div class="panel" id="panel-metabolite">
+
+      <div class="recipe-card open" id="card-12hea">
+        <div class="recipe-header" onclick="toggleCard('card-12hea')">
+          <div class="recipe-icon" style="background:rgba(234,88,12,0.1);color:var(--orange);">💊</div>
+          <div>
+            <div class="recipe-title">12HEA 溶液</div>
+            <div class="recipe-subtitle">12-Hydroxy-6-epi-albrassitriol — drimane 型倍半萜</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              12HEA 是与 <em>Sphingobium</em> 丰度高度相关的玉米叶际代谢物。体外实验证实其对 Bm 完全无毒，但可被 <em>Sphingobium</em> 特异性利用。靶向代谢组检测到叶际浓度为 55-130.5 nM。
+            </div>
+
+            <div class="quick-ref">
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">化学名</div>
+                <div class="quick-ref-value" style="font-size:0.75rem;">12-Hydroxy-6-epi-albrassitriol</div>
+              </div>
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">分子式</div>
+                <div class="quick-ref-value">C₁₅H₂₆O₃</div>
+              </div>
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">MW</div>
+                <div class="quick-ref-value">240.37</div>
+              </div>
+              <div class="quick-ref-item">
+                <div class="quick-ref-label">溶解性</div>
+                <div class="quick-ref-value">DMSO</div>
+              </div>
+            </div>
+
+            <div class="calc-section">
+              <div class="calc-title">母液配制计算器</div>
+              <div class="formula">质量(mg) = 摩尔浓度(mM) × 体积(mL) × MW / 1000</div>
+              <div class="input-row">
+                <span class="input-label">母液浓度</span>
+                <input type="number" class="input-field" id="hea-conc" value="10" min="0" step="1" oninput="calc12HEA()" />
+                <span class="input-unit">mM</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">母液体积</span>
+                <input type="number" class="input-field" id="hea-vol" value="1" min="0" step="0.1" oninput="calc12HEA()" />
+                <span class="input-unit">mL</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">MW</span>
+                <input type="number" class="input-field" id="hea-mw" value="240.37" min="0" step="0.01" oninput="calc12HEA()" />
+                <span class="input-unit">g/mol</span>
+              </div>
+              <div class="result-box" id="hea-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item">
+                  <span class="result-name">12HEA 粉末</span>
+                  <span class="result-value" id="hea-powder">2.404 mg</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">DMSO</span>
+                  <span class="result-value" id="hea-dmso">1.0 mL</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="calc-section">
+              <div class="calc-title">工作液稀释计算器</div>
+              <div class="formula">母液加入量(μL) = 工作浓度(μM) × 工作体积(mL) / 母液浓度(mM)</div>
+              <div class="input-row">
+                <span class="input-label">工作浓度</span>
+                <input type="number" class="input-field" id="hea-wc" value="10" min="0" step="1" oninput="calc12HEAwork()" />
+                <span class="input-unit">μM</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">工作体积</span>
+                <input type="number" class="input-field" id="hea-wv" value="50" min="0" step="1" oninput="calc12HEAwork()" />
+                <span class="input-unit">mL</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">母液浓度</span>
+                <input type="number" class="input-field" id="hea-sc" value="10" min="0" step="1" oninput="calc12HEAwork()" />
+                <span class="input-unit">mM</span>
+              </div>
+              <div class="result-box" id="hea-work-result">
+                <div class="result-title">▸ 稀释方案</div>
+                <div class="result-item">
+                  <span class="result-name">取母液</span>
+                  <span class="result-value" id="hea-work-stock">5.0 μL</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">DMSO 终浓度</span>
+                  <span class="result-value" id="hea-work-dmso">0.01%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider">配制步骤</div>
+            <ol class="steps">
+              <li>从 -20°C 取出 12HEA 标准品，平衡至室温后开盖（避免吸湿）。</li>
+              <li>在分析天平上准确称量（或使用预分装规格）。</li>
+              <li>加入 DMSO 至目标体积，涡旋混匀至完全溶解。</li>
+              <li>分装至小体积 EP 管（如 50 μL/管），-20°C 避光保存。</li>
+              <li>使用时取一支母液，用培养基稀释至工作浓度。</li>
+            </ol>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>12HEA 标准品价格昂贵，称量前确认分析天平精度（建议 0.001 mg 级别）。</li>
+                <li>DMSO 母液应避免反复冻融，建议小体积分装保存。</li>
+                <li>工作液中 DMSO 终浓度 ≤ 0.1%（v/v），同时设置含等量 DMSO 的溶剂对照。</li>
+                <li>体外碳源实验中，12HEA 对 Bm 无毒性——不抑制菌丝生长也不影响产孢，这排除了其直接抗真菌作用。</li>
+                <li>叶际天然浓度在 55-130.5 nM 范围，体外实验使用 10 μM 是为了确保生物学效应可检测。</li>
+              </ul>
+            </div>
+
+            <div class="box info">
+              <div class="box-title">💡 关键对照设计</div>
+              <ul>
+                <li><strong>碳源利用实验对照</strong>：
+                  <ul>
+                    <li>MM only → 基线</li>
+                    <li>MM + 0.2% Glu → 葡萄糖对照</li>
+                    <li>MM + 10 μM 12HEA → 唯一碳源</li>
+                    <li>MM + 0.2% Glu + 10 μM 12HEA → 协同效应</li>
+                    <li>MM + 0.2% Glu + 0.1% DMSO → 溶剂对照</li>
+                  </ul>
+                </li>
+                <li><strong>特异性对照</strong>：用 19 个其他属细菌测试 12HEA 利用能力，仅 3 个有响应，支持 <em>Sphingobium</em> 特异性。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 母液配制 ==================== -->
+    <div class="panel" id="panel-stock">
+
+      <div class="recipe-card open" id="card-tween">
+        <div class="recipe-header" onclick="toggleCard('card-tween')">
+          <div class="recipe-icon" style="background:rgba(8,145,178,0.1);color:var(--cyan);">💧</div>
+          <div>
+            <div class="recipe-title">Tween-20 溶液</div>
+            <div class="recipe-subtitle">表面活性剂 — 用于孢子悬液助悬</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              Tween-20（聚山梨酯 20）是非离子型表面活性剂，用于降低液体表面张力，帮助孢子在水中均匀分散。常用工作浓度为 0.05% (v/v)。
+            </div>
+
+            <div class="calc-section">
+              <div class="calc-title">稀释计算器</div>
+              <div class="formula">10% 母液：取 1 mL Tween-20 + 9 mL 蒸馏水 → 涡旋混匀</div>
+              <div class="input-row">
+                <span class="input-label">工作浓度</span>
+                <input type="number" class="input-field" id="tw-conc" value="0.05" min="0" step="0.01" oninput="calcTween()" />
+                <span class="input-unit">%</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">目标体积</span>
+                <input type="number" class="input-field" id="tw-vol" value="100" min="0" step="10" oninput="calcTween()" />
+                <span class="input-unit">mL</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">母液浓度</span>
+                <input type="number" class="input-field" id="tw-stock" value="10" min="0" step="1" oninput="calcTween()" />
+                <span class="input-unit">%</span>
+              </div>
+              <div class="result-box" id="tw-result">
+                <div class="result-title">▸ 稀释方案</div>
+                <div class="result-item">
+                  <span class="result-name">取 10% Tween-20</span>
+                  <span class="result-value" id="tw-stock-vol">0.50 mL</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">加水至</span>
+                  <span class="result-value" id="tw-water-vol">100 mL</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card" id="card-antibiotics">
+        <div class="recipe-header" onclick="toggleCard('card-antibiotics')">
+          <div class="recipe-icon" style="background:rgba(124,58,237,0.1);color:var(--purple);">💉</div>
+          <div>
+            <div class="recipe-title">常用抗生素母液</div>
+            <div class="recipe-subtitle">Amp / Kan / Rif / Cm / Tet / Spec / Gm / Sm / Carb / Ny</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              抗生素母液通常配制成 1000× 浓储液，过滤除菌后分装 -20°C 保存。使用时按 1:1000 加入冷却至 55°C 以下的培养基中。Nystatin 为抗真菌抗生素，用于分离细菌时抑制真菌污染。
+            </div>
+
+            <table class="comp-table">
+              <thead>
+                <tr>
+                  <th>抗生素</th>
+                  <th>缩写</th>
+                  <th>母液浓度</th>
+                  <th>工作浓度</th>
+                  <th>溶剂</th>
+                  <th>保存</th>
+                  <th>用途</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Ampicillin</td><td class="mono">Amp</td>
+                  <td class="mono">100 mg/mL</td><td class="mono">100 μg/mL</td>
+                  <td>ddH₂O</td><td>-20°C</td>
+                  <td>革兰氏阳性菌筛选</td>
+                </tr>
+                <tr>
+                  <td>Carbenicillin</td><td class="mono">Carb</td>
+                  <td class="mono">100 mg/mL</td><td class="mono">100 μg/mL</td>
+                  <td>ddH₂O</td><td>-20°C</td>
+                  <td>Amp 替代，更稳定</td>
+                </tr>
+                <tr>
+                  <td>Kanamycin</td><td class="mono">Kan</td>
+                  <td class="mono">50 mg/mL</td><td class="mono">50 μg/mL</td>
+                  <td>ddH₂O</td><td>-20°C</td>
+                  <td>广谱，常用筛选标记</td>
+                </tr>
+                <tr>
+                  <td>Gentamicin</td><td class="mono">Gm</td>
+                  <td class="mono">50 mg/mL</td><td class="mono">50 μg/mL</td>
+                  <td>ddH₂O</td><td>-20°C</td>
+                  <td>革兰氏阴性菌筛选</td>
+                </tr>
+                <tr>
+                  <td>Streptomycin</td><td class="mono">Sm</td>
+                  <td class="mono">100 mg/mL</td><td class="mono">100 μg/mL</td>
+                  <td>ddH₂O</td><td>-20°C</td>
+                  <td>植物病原菌筛选</td>
+                </tr>
+                <tr>
+                  <td>Spectinomycin</td><td class="mono">Spec</td>
+                  <td class="mono">100 mg/mL</td><td class="mono">100 μg/mL</td>
+                  <td>ddH₂O</td><td>-20°C</td>
+                  <td>植物病原菌筛选</td>
+                </tr>
+                <tr>
+                  <td>Rifampicin</td><td class="mono">Rif</td>
+                  <td class="mono">50 mg/mL</td><td class="mono">50 μg/mL</td>
+                  <td>DMSO</td><td>-20°C 避光</td>
+                  <td>革兰氏阴性菌，内生菌筛选</td>
+                </tr>
+                <tr>
+                  <td>Chloramphenicol</td><td class="mono">Cm</td>
+                  <td class="mono">34 mg/mL</td><td class="mono">34 μg/mL</td>
+                  <td>乙醇</td><td>-20°C</td>
+                  <td>广谱，低背景筛选</td>
+                </tr>
+                <tr>
+                  <td>Tetracycline</td><td class="mono">Tet</td>
+                  <td class="mono">10 mg/mL</td><td class="mono">10 μg/mL</td>
+                  <td>乙醇</td><td>-20°C 避光</td>
+                  <td>广谱，四环素抗性筛选</td>
+                </tr>
+                <tr>
+                  <td>Nystatin</td><td class="mono">Ny</td>
+                  <td class="mono">50 mg/mL</td><td class="mono">50 μg/mL</td>
+                  <td>DMSO</td><td>-20°C 避光</td>
+                  <td>抗真菌（分离细菌时用）</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="calc-section">
+              <div class="calc-title">母液配制计算器</div>
+              <div class="formula">质量(mg) = 母液浓度(mg/mL) × 体积(mL)</div>
+              <div class="input-row">
+                <span class="input-label">抗生素</span>
+                <select class="input-field" id="abx-type" onchange="calcAbx()" style="max-width:260px;">
+                  <option value="100" data-solvent="ddH₂O">Ampicillin (100 mg/mL)</option>
+                  <option value="100" data-solvent="ddH₂O">Carbenicillin (100 mg/mL)</option>
+                  <option value="50" data-solvent="ddH₂O">Kanamycin (50 mg/mL)</option>
+                  <option value="50" data-solvent="ddH₂O">Gentamicin (50 mg/mL)</option>
+                  <option value="100" data-solvent="ddH₂O">Streptomycin (100 mg/mL)</option>
+                  <option value="100" data-solvent="ddH₂O">Spectinomycin (100 mg/mL)</option>
+                  <option value="50" data-solvent="DMSO">Rifampicin (50 mg/mL)</option>
+                  <option value="34" data-solvent="乙醇">Chloramphenicol (34 mg/mL)</option>
+                  <option value="10" data-solvent="乙醇">Tetracycline (10 mg/mL)</option>
+                  <option value="50" data-solvent="DMSO">Nystatin (50 mg/mL)</option>
+                </select>
+              </div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="abx-vol" value="10" min="0" step="1" oninput="calcAbx()" />
+                <span class="input-unit">mL</span>
+              </div>
+              <div class="result-box" id="abx-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item">
+                  <span class="result-name">抗生素粉末</span>
+                  <span class="result-value" id="abx-powder">1000 mg</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">溶剂</span>
+                  <span class="result-value" id="abx-solvent">10 mL ddH₂O</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>所有抗生素母液必须 <strong>0.22 μm 滤膜过滤除菌</strong>，不可高压灭菌。</li>
+                <li>Rifampicin、Tetracycline 和 Nystatin 需避光保存（锡箔纸包裹）。</li>
+                <li>Rifampicin / Nystatin 用 DMSO 溶解时，先用少量 DMSO 润湿粉末，再补足体积。</li>
+                <li>Carbenicillin 比 Ampicillin 更稳定（耐 β-内酰胺酶降解），推荐替代 Amp 用于长期培养。</li>
+                <li>含抗生素的平板 4°C 保存不超过 1 个月；液体母液 -20°C 可保存 6 个月。</li>
+                <li>Nystatin 仅用于抑制真菌，对细菌无影响；分离叶际/根际细菌时可添加以减少真菌污染。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card" id="card-buffer">
+        <div class="recipe-header" onclick="toggleCard('card-buffer')">
+          <div class="recipe-icon" style="background:rgba(37,99,235,0.1);color:var(--accent);">⚗️</div>
+          <div>
+            <div class="recipe-title">PBS 磷酸缓冲液</div>
+            <div class="recipe-subtitle">Phosphate Buffered Saline — pH 7.4</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              PBS 是生物学实验中最常用的缓冲液，用于稀释菌液、洗涤细胞、配制反应体系等。pH 7.4 接近生理 pH。
+            </div>
+
+            <table class="comp-table">
+              <thead>
+                <tr>
+                  <th>组分</th>
+                  <th>1× PBS (g/L)</th>
+                  <th>10× PBS (g/L)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>NaCl</td>
+                  <td class="mono">8.0</td>
+                  <td class="mono">80.0</td>
+                </tr>
+                <tr>
+                  <td>KCl</td>
+                  <td class="mono">0.2</td>
+                  <td class="mono">2.0</td>
+                </tr>
+                <tr>
+                  <td>Na₂HPO₄</td>
+                  <td class="mono">1.44</td>
+                  <td class="mono">14.4</td>
+                </tr>
+                <tr>
+                  <td>NaH₂PO₄·H₂O</td>
+                  <td class="mono">—</td>
+                  <td class="mono">—</td>
+                </tr>
+                <tr>
+                  <td>KH₂PO₄</td>
+                  <td class="mono">0.24</td>
+                  <td class="mono">2.4</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="calc-section">
+              <div class="calc-title">1× PBS 用量计算器</div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="pbs-vol" value="1" min="0" step="0.1" oninput="calcPBS()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="result-box" id="pbs-result">
+                <div class="result-title">▸ 称量清单 (1× PBS)</div>
+                <div class="result-item">
+                  <span class="result-name">NaCl</span>
+                  <span class="result-value" id="pbs-nacl">8.0 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">KCl</span>
+                  <span class="result-value" id="pbs-kcl">0.2 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">Na₂HPO₄</span>
+                  <span class="result-value" id="pbs-na2hpo4">1.44 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">KH₂PO₄</span>
+                  <span class="result-value" id="pbs-kh2po4">0.24 g</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">蒸馏水</span>
+                  <span class="result-value" id="pbs-water">1000 mL</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="box info">
+              <div class="box-title">💡 使用提示</div>
+              <ul>
+                <li>配制 10× PBS 母液后灭菌保存，使用时稀释 10 倍即为 1× PBS。</li>
+                <li>调节 pH 至 7.4（用 HCl 或 NaOH）。</li>
+                <li>可用于稀释菌悬液、洗涤菌体、配制各种反应 buffer。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== PCR 反应 ==================== -->
+    <div class="panel" id="panel-pcr">
+
+      <!-- Taq PCR -->
+      <div class="recipe-card open" id="card-taq">
+        <div class="recipe-header" onclick="toggleCard('card-taq')">
+          <div class="recipe-icon" style="background:rgba(234,88,12,0.1);color:var(--orange);">🔥</div>
+          <div>
+            <div class="recipe-title">常规 PCR 反应体系（Taq 酶）</div>
+            <div class="recipe-subtitle">Taq DNA Polymerase — 25 μL 体系</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              常规 PCR 使用 Taq DNA Polymerase，适用于菌落 PCR、基因检测、克隆验证等。3'→5' 外切酶活性弱，保真度较低，不适用于精确克隆。
+            </div>
+
+            <table class="comp-table">
+              <thead>
+                <tr><th>组分</th><th>终浓度/量</th><th>母液浓度</th><th>每 25 μL</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>10× PCR Buffer</td><td class="mono">1×</td><td class="mono">10×</td><td class="mono">2.5 μL</td></tr>
+                <tr><td>dNTP Mix</td><td class="mono">200 μM each</td><td class="mono">10 mM each</td><td class="mono">0.5 μL</td></tr>
+                <tr><td>Forward Primer</td><td class="mono">0.4 μM</td><td class="mono">10 μM</td><td class="mono">1.0 μL</td></tr>
+                <tr><td>Reverse Primer</td><td class="mono">0.4 μM</td><td class="mono">10 μM</td><td class="mono">1.0 μL</td></tr>
+                <tr><td>Taq DNA Polymerase</td><td class="mono">1.25 U</td><td class="mono">5 U/μL</td><td class="mono">0.25 μL</td></tr>
+                <tr><td>Template DNA</td><td class="mono">10-100 ng</td><td class="mono">—</td><td class="mono">1.0 μL</td></tr>
+                <tr><td>ddH₂O</td><td class="mono">—</td><td class="mono">—</td><td class="mono">补至 25 μL</td></tr>
+              </tbody>
+            </table>
+
+            <div class="calc-section">
+              <div class="calc-title">批量计算器（含 10% 余量）</div>
+              <div class="formula">各组分总量 = 单反应量 × 反应数 × 1.1</div>
+              <div class="input-row">
+                <span class="input-label">反应数</span>
+                <input type="number" class="input-field" id="taq-n" value="10" min="1" step="1" oninput="calcTaq()" />
+                <span class="input-unit">个</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">单反应体积</span>
+                <input type="number" class="input-field" id="taq-vol" value="25" min="10" step="5" oninput="calcTaq()" />
+                <span class="input-unit">μL</span>
+              </div>
+              <div class="result-box" id="taq-result">
+                <div class="result-title">▸ Master Mix 配制清单</div>
+                <div class="result-item"><span class="result-name">10× Buffer</span><span class="result-value" id="taq-buf">27.5 μL</span></div>
+                <div class="result-item"><span class="result-name">dNTP Mix (10 mM)</span><span class="result-value" id="taq-dntp">5.5 μL</span></div>
+                <div class="result-item"><span class="result-name">F-Primer (10 μM)</span><span class="result-value" id="taq-fp">11.0 μL</span></div>
+                <div class="result-item"><span class="result-name">R-Primer (10 μM)</span><span class="result-value" id="taq-rp">11.0 μL</span></div>
+                <div class="result-item"><span class="result-name">Taq (5 U/μL)</span><span class="result-value" id="taq-enzyme">2.75 μL</span></div>
+                <div class="result-item"><span class="result-name">ddH₂O（补至总量 - 模板）</span><span class="result-value" id="taq-water">—</span></div>
+                <div class="result-item"><span class="result-name">Master Mix 总量（不含模板）</span><span class="result-value" id="taq-mm">—</span></div>
+              </div>
+            </div>
+
+            <div class="divider">推荐 PCR 程序</div>
+            <table class="comp-table">
+              <thead><tr><th>步骤</th><th>温度</th><th>时间</th><th>循环</th></tr></thead>
+              <tbody>
+                <tr><td>预变性</td><td class="mono">95°C</td><td class="mono">3-5 min</td><td class="mono">1×</td></tr>
+                <tr><td>变性</td><td class="mono">95°C</td><td class="mono">30 s</td><td class="mono" rowspan="3">30-35×</td></tr>
+                <tr><td>退火</td><td class="mono">55-65°C</td><td class="mono">30 s</td></tr>
+                <tr><td>延伸</td><td class="mono">72°C</td><td class="mono">1 min/kb</td></tr>
+                <tr><td>终延伸</td><td class="mono">72°C</td><td class="mono">5-10 min</td><td class="mono">1×</td></tr>
+              </tbody>
+            </table>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>退火温度根据引物 Tm 值设定，一般 Tm - 5°C。可先做梯度 PCR 确定最佳退火温度。</li>
+                <li>菌落 PCR 时，用无菌枪头轻触菌落后在体系中涮洗即可，无需提取 DNA。</li>
+                <li>延伸时间按 1 min/kb 估算，Taq 酶扩增片段通常 ≤ 3 kb。</li>
+                <li>Master Mix 可先配好（不含模板和引物），分装后再加模板和引物，减少移液误差。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phusion PCR -->
+      <div class="recipe-card" id="card-phusion">
+        <div class="recipe-header" onclick="toggleCard('card-phusion')">
+          <div class="recipe-icon" style="background:rgba(37,99,235,0.1);color:var(--accent);">⚡</div>
+          <div>
+            <div class="recipe-title">高保真 PCR 反应体系（Phusion）</div>
+            <div class="recipe-subtitle">Phusion High-Fidelity DNA Polymerase — 50 μL 体系</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              Phusion 聚合酶具有 3'→5' 外切酶（校对）活性，保真度是 Taq 的 50 倍以上。适用于精确克隆、定点突变、长片段扩增。扩增速度极快（15-30 s/kb）。
+            </div>
+
+            <table class="comp-table">
+              <thead>
+                <tr><th>组分</th><th>终浓度/量</th><th>母液浓度</th><th>每 50 μL</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>5× Phusion HF Buffer</td><td class="mono">1×</td><td class="mono">5×</td><td class="mono">10 μL</td></tr>
+                <tr><td>dNTP Mix</td><td class="mono">200 μM each</td><td class="mono">10 mM each</td><td class="mono">1.0 μL</td></tr>
+                <tr><td>Forward Primer</td><td class="mono">0.5 μM</td><td class="mono">10 μM</td><td class="mono">2.5 μL</td></tr>
+                <tr><td>Reverse Primer</td><td class="mono">0.5 μM</td><td class="mono">10 μM</td><td class="mono">2.5 μL</td></tr>
+                <tr><td>Phusion DNA Polymerase</td><td class="mono">1.0 U</td><td class="mono">2 U/μL</td><td class="mono">0.5 μL</td></tr>
+                <tr><td>Template DNA</td><td class="mono">10-100 ng</td><td class="mono">—</td><td class="mono">1.0 μL</td></tr>
+                <tr><td>ddH₂O</td><td class="mono">—</td><td class="mono">—</td><td class="mono">补至 50 μL</td></tr>
+              </tbody>
+            </table>
+
+            <div class="calc-section">
+              <div class="calc-title">批量计算器（含 10% 余量）</div>
+              <div class="input-row">
+                <span class="input-label">反应数</span>
+                <input type="number" class="input-field" id="phu-n" value="10" min="1" step="1" oninput="calcPhusion()" />
+                <span class="input-unit">个</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">单反应体积</span>
+                <input type="number" class="input-field" id="phu-vol" value="50" min="10" step="5" oninput="calcPhusion()" />
+                <span class="input-unit">μL</span>
+              </div>
+              <div class="result-box" id="phu-result">
+                <div class="result-title">▸ Master Mix 配制清单</div>
+                <div class="result-item"><span class="result-name">5× HF Buffer</span><span class="result-value" id="phu-buf">110.0 μL</span></div>
+                <div class="result-item"><span class="result-name">dNTP Mix (10 mM)</span><span class="result-value" id="phu-dntp">11.0 μL</span></div>
+                <div class="result-item"><span class="result-name">F-Primer (10 μM)</span><span class="result-value" id="phu-fp">27.5 μL</span></div>
+                <div class="result-item"><span class="result-name">R-Primer (10 μM)</span><span class="result-value" id="phu-rp">27.5 μL</span></div>
+                <div class="result-item"><span class="result-name">Phusion (2 U/μL)</span><span class="result-value" id="phu-enzyme">5.5 μL</span></div>
+                <div class="result-item"><span class="result-name">ddH₂O（补至总量 - 模板）</span><span class="result-value" id="phu-water">—</span></div>
+                <div class="result-item"><span class="result-name">Master Mix 总量（不含模板）</span><span class="result-value" id="phu-mm">—</span></div>
+              </div>
+            </div>
+
+            <div class="divider">推荐 PCR 程序</div>
+            <table class="comp-table">
+              <thead><tr><th>步骤</th><th>温度</th><th>时间</th><th>循环</th></tr></thead>
+              <tbody>
+                <tr><td>预变性</td><td class="mono">98°C</td><td class="mono">30 s</td><td class="mono">1×</td></tr>
+                <tr><td>变性</td><td class="mono">98°C</td><td class="mono">5-10 s</td><td class="mono" rowspan="3">25-35×</td></tr>
+                <tr><td>退火</td><td class="mono">60-72°C</td><td class="mono">10-30 s</td></tr>
+                <tr><td>延伸</td><td class="mono">72°C</td><td class="mono">15-30 s/kb</td></tr>
+                <tr><td>终延伸</td><td class="mono">72°C</td><td class="mono">5-10 min</td><td class="mono">1×</td></tr>
+              </tbody>
+            </table>
+
+            <div class="box info">
+              <div class="box-title">💡 Phusion vs Taq 选择指南</div>
+              <ul>
+                <li><strong>克隆/表达载体构建</strong>：必须用 Phusion（保真度高，无 A 突出端）</li>
+                <li><strong>菌落 PCR / 基因检测</strong>：用 Taq 即可（快速、便宜）</li>
+                <li><strong>长片段（>3 kb）</strong>：优先用 Phusion（延伸速度快，保真度高）</li>
+                <li><strong>GC 含量高 / 复杂模板</strong>：Phusion + DMSO（终浓度 3-5%）或甜菜碱（1M）</li>
+                <li>Phusion 产物为平末端，克隆时需用 In-Fusion 或平末端连接；Taq 产物 3' 端带 A，可用 T-vector 克隆。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- dNTP Mix -->
+      <div class="recipe-card" id="card-dntp">
+        <div class="recipe-header" onclick="toggleCard('card-dntp')">
+          <div class="recipe-icon" style="background:rgba(22,163,74,0.1);color:var(--green);">🧬</div>
+          <div>
+            <div class="recipe-title">dNTP Mix 配制</div>
+            <div class="recipe-subtitle">dATP / dTTP / dCTP / dGTP 混合液</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              4 种脱氧核苷三磷酸（dNTP）的等摩尔混合液，是 PCR 反应的必需组分。通常配制 10 mM each 的 dNTP Mix 母液，使用时稀释至 200 μM each。
+            </div>
+
+            <div class="calc-section">
+              <div class="calc-title">dNTP Mix 母液配制（10 mM each）</div>
+              <div class="formula">从 100 mM 单组分母液混合：取各 10 μL + 60 μL ddH₂O = 100 μL (10 mM each)</div>
+              <div class="input-row">
+                <span class="input-label">目标体积</span>
+                <input type="number" class="input-field" id="dntp-vol" value="100" min="10" step="10" oninput="calcDNTP()" />
+                <span class="input-unit">μL</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">目标浓度</span>
+                <input type="number" class="input-field" id="dntp-conc" value="10" min="1" step="1" oninput="calcDNTP()" />
+                <span class="input-unit">mM each</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">原液浓度</span>
+                <input type="number" class="input-field" id="dntp-stock" value="100" min="10" step="10" oninput="calcDNTP()" />
+                <span class="input-unit">mM each</span>
+              </div>
+              <div class="result-box" id="dntp-result">
+                <div class="result-title">▸ 配制方案</div>
+                <div class="result-item"><span class="result-name">100 mM dATP</span><span class="result-value" id="dntp-datp">10.0 μL</span></div>
+                <div class="result-item"><span class="result-name">100 mM dTTP</span><span class="result-value" id="dntp-dttp">10.0 μL</span></div>
+                <div class="result-item"><span class="result-name">100 mM dCTP</span><span class="result-value" id="dntp-dctp">10.0 μL</span></div>
+                <div class="result-item"><span class="result-name">100 mM dGTP</span><span class="result-value" id="dntp-dgtp">10.0 μL</span></div>
+                <div class="result-item"><span class="result-name">ddH₂O</span><span class="result-value" id="dntp-water">60.0 μL</span></div>
+              </div>
+            </div>
+
+            <div class="divider">配制步骤</div>
+            <ol class="steps">
+              <li>从 -20°C 取出 100 mM 单组分 dNTP 母液，冰上解冻。</li>
+              <li>按计算量分别取 dATP、dTTP、dCTP、dGTP 加入同一 EP 管。</li>
+              <li>加入 ddH₂O 补至目标体积。</li>
+              <li>涡旋混匀，短暂离心收集。</li>
+              <li>分装为小体积（如 50 μL/管），-20°C 保存，避免反复冻融。</li>
+            </ol>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>dNTP 对冻融敏感，建议小体积分装保存（≤50 μL/管）。</li>
+                <li>10 mM each = 40 mM 总 dNTP 浓度（每种各 10 mM）。</li>
+                <li>使用时取 0.5 μL（Taq 体系）或 1.0 μL（Phusion 体系）加入 25-50 μL 反应。</li>
+                <li>平衡至室温后使用，避免低温移液导致浓度偏差。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agarose Gel -->
+      <div class="recipe-card" id="card-gel">
+        <div class="recipe-header" onclick="toggleCard('card-gel')">
+          <div class="recipe-icon" style="background:rgba(180,83,9,0.1);color:var(--yellow);">🧪</div>
+          <div>
+            <div class="recipe-title">琼脂糖凝胶电泳</div>
+            <div class="recipe-subtitle">Agarose Gel Electrophoresis — 核酸检测与分离</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              琼脂糖凝胶电泳用于检测 PCR 产物、酶切片段及核酸纯度。不同浓度凝胶适用于不同片段大小的分离。
+            </div>
+
+            <div class="quick-ref">
+              <div class="quick-ref-item"><div class="quick-ref-label">0.8%</div><div class="quick-ref-value">>2 kb</div></div>
+              <div class="quick-ref-item"><div class="quick-ref-label">1.0%</div><div class="quick-ref-value">0.5-2 kb</div></div>
+              <div class="quick-ref-item"><div class="quick-ref-label">1.5%</div><div class="quick-ref-value">0.2-1 kb</div></div>
+              <div class="quick-ref-item"><div class="quick-ref-label">2.0%</div><div class="quick-ref-value"><200 bp</div></div>
+            </div>
+
+            <div class="calc-section">
+              <div class="calc-title">凝胶配制计算器</div>
+              <div class="input-row">
+                <span class="input-label">凝胶浓度</span>
+                <input type="number" class="input-field" id="gel-pct" value="1.0" min="0.5" max="3.0" step="0.1" oninput="calcGel()" />
+                <span class="input-unit">%</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">凝胶体积</span>
+                <input type="number" class="input-field" id="gel-vol" value="100" min="10" step="10" oninput="calcGel()" />
+                <span class="input-unit">mL</span>
+              </div>
+              <div class="result-box" id="gel-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item"><span class="result-name">琼脂糖粉</span><span class="result-value" id="gel-agarose">1.0 g</span></div>
+                <div class="result-item"><span class="result-name">1× TAE Buffer</span><span class="result-value" id="gel-tae">100 mL</span></div>
+                <div class="result-item"><span class="result-name">核酸染料（可选）</span><span class="result-value" id="gel-dye">5 μL</span></div>
+              </div>
+            </div>
+
+            <div class="divider">1× TAE Buffer 配方（1 L）</div>
+            <table class="comp-table">
+              <thead><tr><th>组分</th><th>用量</th></tr></thead>
+              <tbody>
+                <tr><td>Tris 碱</td><td class="mono">4.84 g (40 mM)</td></tr>
+                <tr><td>冰醋酸</td><td class="mono">1.14 mL (20 mM)</td></tr>
+                <tr><td>0.5 M EDTA (pH 8.0)</td><td class="mono">2 mL (1 mM)</td></tr>
+                <tr><td>ddH₂O</td><td class="mono">补至 1 L</td></tr>
+              </tbody>
+            </table>
+
+            <div class="divider">配制步骤</div>
+            <ol class="steps">
+              <li>称取琼脂糖粉，加入 1× TAE Buffer 中。</li>
+              <li>微波炉加热 1-2 min 至完全溶解（注意防止暴沸，中途取出摇匀）。</li>
+              <li>冷却至约 55°C（手可触摸瓶壁）。</li>
+              <li>加入核酸染料（如 GelRed 1:10000 或 SYBR Safe），轻轻混匀。</li>
+              <li>倒入制胶槽，插入梳子，室温凝固 20-30 min。</li>
+              <li>拔出梳子，放入电泳槽，加 1× TAE 至没过凝胶。</li>
+              <li>上样，120-150 V 电泳 20-40 min。</li>
+            </ol>
+
+            <div class="box info">
+              <div class="box-title">💡 实用提示</div>
+              <ul>
+                <li>PCR 产物检测通常用 1% 凝胶，120 V 电泳 25-30 min。</li>
+                <li>上样缓冲液（6× Loading Buffer）含甘油（使样品沉入孔中）和染料（指示迁移进度）。</li>
+                <li>DNA Ladder 建议每块胶至少加 1-2 个泳道，用于判断片段大小。</li>
+                <li>GelRed / SYBR Safe 比 EB 更安全，但灵敏度略低。</li>
+              </ul>
+            </div>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 安全提示</div>
+              <ul>
+                <li><strong>EB（溴化乙锭）为致突变剂</strong>，操作时必须戴手套，使用专用区域和废液桶。</li>
+                <li>推荐使用 GelRed 或 SYBR Safe 等安全替代染料。</li>
+                <li>微波加热琼脂糖时，瓶口不要密封，防止压力积聚导致爆裂。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-title">最近更新</div>
+    <ul class="update-list">
+      <li class="update-item">
+        <span class="update-date">2026-05-06</span>
+        <span class="update-tag new">新增</span>
+        <span class="update-desc">KB / 1/2 MS / V8 培养基 — 假单胞菌培养、植物组培、卵菌/真菌培养</span>
+      </li>
+      <li class="update-item">
+        <span class="update-date">2026-05-06</span>
+        <span class="update-tag new">新增</span>
+        <span class="update-desc">10 mM MgCl₂ 缓冲液 — 孢子悬浮液配制专用</span>
+      </li>
+      <li class="update-item">
+        <span class="update-date">2026-05-06</span>
+        <span class="update-tag new">新增</span>
+        <span class="update-desc">全局搜索栏 — 支持跨标签页搜索所有试剂、培养基和配方</span>
+      </li>
+      <li class="update-item">
+        <span class="update-date">2026-05-06</span>
+        <span class="update-tag new">新增</span>
+        <span class="update-desc">PCR 反应标签页 — Taq / Phusion 体系计算器、dNTP 配制、琼脂糖凝胶</span>
+      </li>
+      <li class="update-item">
+        <span class="update-date">2026-05-06</span>
+        <span class="update-tag opt">优化</span>
+        <span class="update-desc">培养基液体/固体切换 — PDA/PDB、TSB/TSA、LB/LBA、R2A 统一切换按钮</span>
+      </li>
+      <li class="update-item">
+        <span class="update-date">2026-05-06</span>
+        <span class="update-tag new">新增</span>
+        <span class="update-desc">R2A 培养基 — 环境微生物专用低营养培养基（8 组分配方）</span>
+      </li>
+      <li class="update-item">
+        <span class="update-date">2026-05-06</span>
+        <span class="update-tag opt">优化</span>
+        <span class="update-desc">抗生素板块扩展至 10 种 — 新增 Carb / Gm / Sm / Spec / Ny</span>
+      </li>
+      <li class="update-item">
+        <span class="update-date">2026-05-06</span>
+        <span class="update-tag fix">主题</span>
+        <span class="update-desc">界面切换为浅色主题，提升实验室环境下的可读性</span>
+      </li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+// --- Nav ---
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
+  });
+});
+
+// --- Toggle Card ---
+function toggleCard(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// --- Search ---
+const searchableCards = [];
+function buildSearchIndex() {
+  document.querySelectorAll('.recipe-card').forEach(card => {
+    const title = card.querySelector('.recipe-title')?.textContent?.toLowerCase() || '';
+    const subtitle = card.querySelector('.recipe-subtitle')?.textContent?.toLowerCase() || '';
+    const desc = card.querySelector('.desc')?.textContent?.toLowerCase() || '';
+    const tables = card.querySelectorAll('.comp-table td');
+    let tableText = '';
+    tables.forEach(td => tableText += (td.textContent?.toLowerCase() || '') + ' ');
+    const boxes = card.querySelectorAll('.box');
+    let boxText = '';
+    boxes.forEach(b => boxText += (b.textContent?.toLowerCase() || '') + ' ');
+    searchableCards.push({
+      el: card,
+      panel: card.closest('.panel')?.id || '',
+      text: title + ' ' + subtitle + ' ' + desc + ' ' + tableText + ' ' + boxText
+    });
+  });
+}
+buildSearchIndex();
+
+function onSearch() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const clearBtn = document.getElementById('searchClear');
+  const info = document.getElementById('searchResultsInfo');
+  clearBtn.classList.toggle('show', q.length > 0);
+
+  if (!q) {
+    // Reset: show all cards, restore normal panel view
+    searchableCards.forEach(c => {
+      c.el.classList.remove('search-hidden', 'search-match');
+    });
+    info.classList.remove('show');
+    // Restore normal nav behavior — show active panel only
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    const activeBtn = document.querySelector('.nav-btn.active');
+    if (activeBtn) {
+      document.getElementById('panel-' + activeBtn.dataset.panel).classList.add('active');
+    }
+    return;
+  }
+
+  // Show all panels during search
+  document.querySelectorAll('.panel').forEach(p => p.classList.add('active'));
+
+  let matchCount = 0;
+  searchableCards.forEach(c => {
+    if (c.text.includes(q)) {
+      c.el.classList.remove('search-hidden');
+      c.el.classList.add('search-match');
+      c.el.classList.add('open');
+      matchCount++;
+    } else {
+      c.el.classList.add('search-hidden');
+      c.el.classList.remove('search-match');
+    }
+  });
+
+  info.classList.add('show');
+  info.textContent = matchCount > 0
+    ? `找到 ${matchCount} 个匹配结果`
+    : '未找到匹配结果，试试其他关键词';
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  onSearch();
+  document.getElementById('searchInput').focus();
+}
+
+// --- Media State ---
+const mediaState = { pda: false, tsb: false, lb: false, r2a: false, kb: false, ms: false, v8: false };
+
+function toggleMedia(prefix, isSolid) {
+  mediaState[prefix] = isSolid;
+  const card = document.getElementById('card-' + prefix);
+  const btns = card.querySelectorAll('.media-toggle-btn');
+  btns[0].classList.toggle('active', !isSolid);
+  btns[1].classList.toggle('active', isSolid);
+
+  // Toggle agar visibility
+  const agarRow = document.getElementById(prefix + '-agar-row');
+  const agarRef = document.getElementById(prefix + '-agar-ref');
+  const tableAgar = document.getElementById(prefix + '-table-agar');
+  if (agarRow) agarRow.style.display = isSolid ? 'flex' : 'none';
+  if (agarRef) agarRef.style.display = isSolid ? '' : 'none';
+  if (tableAgar) tableAgar.style.display = isSolid ? '' : 'none';
+
+  // Toggle agar step
+  const agarStep = document.getElementById(prefix + '-step-agar');
+  const pourStep = document.getElementById(prefix + '-step-pour');
+  if (agarStep) agarStep.style.display = isSolid ? '' : 'none';
+  if (pourStep) pourStep.style.display = isSolid ? '' : 'none';
+
+  // V8 special handling — two calculators
+  if (prefix === 'v8') {
+    const diyAgarRow = document.getElementById('v8-diy-agar-row');
+    const diyAgarStep = document.getElementById('v8-diy-step-agar');
+    const diyPourStep = document.getElementById('v8-diy-step-pour');
+    if (diyAgarRow) diyAgarRow.style.display = isSolid ? 'flex' : 'none';
+    if (diyAgarStep) diyAgarStep.style.display = isSolid ? '' : 'none';
+    if (diyPourStep) diyPourStep.style.display = isSolid ? '' : 'none';
+    // Toggle solid vs liquid steps for 2× method
+    const agarStep1 = document.getElementById('v8-agar-step-1');
+    const agarStep2 = document.getElementById('v8-agar-step-2');
+    const agarStep3 = document.getElementById('v8-agar-step-3');
+    const liqStep = document.getElementById('v8-liq-step');
+    if (agarStep1) agarStep1.style.display = isSolid ? '' : 'none';
+    if (agarStep2) agarStep2.style.display = isSolid ? '' : 'none';
+    if (agarStep3) agarStep3.style.display = isSolid ? '' : 'none';
+    if (liqStep) liqStep.style.display = isSolid ? 'none' : '';
+  }
+
+  // Update titles
+  const titleMap = {
+    pda: { liquid: 'PDB', solid: 'PDA' },
+    tsb: { liquid: 'TSB', solid: 'TSA' },
+    lb:  { liquid: 'LB',  solid: 'LBA' },
+    r2a: { liquid: 'R2A', solid: 'R2A' },
+    kb:  { liquid: 'KB',  solid: 'KB' },
+    ms:  { liquid: 'MS',  solid: 'MS' },
+    v8:  { liquid: 'V8',  solid: 'V8' }
+  };
+  const subtitleMap = {
+    pda: { liquid: 'Potato Dextrose Broth — 用于 Bm 液体扩培', solid: 'Potato Dextrose Agar — 用于 Bm 培养与产孢' },
+    tsb: { liquid: 'Half-Strength Tryptic Soy Broth — 用于 Sphingobium 常规培养', solid: 'Half-Strength Tryptic Soy Agar — 用于 Sphingobium 平板培养' },
+    lb:  { liquid: 'Luria-Bertani Broth — 通用液体细菌培养基', solid: 'Luria-Bertani Agar — 通用固体细菌培养基' },
+    r2a: { liquid: "Reasoner's 2A Broth — 环境微生物液体培养", solid: "Reasoner's 2A Agar — 环境微生物平板培养" },
+    kb:  { liquid: "King's B Broth — 假单胞菌液体培养", solid: "King's B Agar — 假单胞菌平板培养" },
+    ms:  { liquid: 'Half-Strength MS Liquid — 种子萌发液体培养', solid: 'Half-Strength MS Agar — 植物组培固体培养' },
+    v8:  { liquid: 'V8 Juice Broth — 卵菌/真菌液体培养', solid: 'V8 Juice Agar — 卵菌/真菌平板培养' }
+  };
+  const t = isSolid ? 'solid' : 'liquid';
+  const titleEl = document.getElementById(prefix + '-title');
+  const subtitleEl = document.getElementById(prefix + '-subtitle');
+  if (titleEl) titleEl.textContent = titleMap[prefix][t];
+  if (subtitleEl) subtitleEl.textContent = subtitleMap[prefix][t];
+
+  // Recalculate
+  const calcFn = { pda: calcPDA, tsb: calcTSB, lb: calcLB, r2a: calcR2A };
+  if (calcFn[prefix]) calcFn[prefix]();
+}
+
+// --- PDA / PDB ---
+function calcPDA() {
+  const v = parseFloat(document.getElementById('pda-vol').value) || 0;
+  const isSolid = mediaState.pda;
+  const powderRate = isSolid ? 39 : 26;
+  const powderLabel = isSolid ? 'PDA 粉剂' : 'PDB 粉剂';
+  document.getElementById('pda-powder-label').textContent = powderLabel;
+  document.getElementById('pda-powder').textContent = (powderRate * v).toFixed(1) + ' g';
+  document.getElementById('pda-agar').textContent = (15 * v).toFixed(1) + ' g';
+  document.getElementById('pda-water').textContent = (1000 * v).toFixed(0) + ' mL';
+  document.getElementById('pda-formula').textContent = isSolid
+    ? 'PDA粉剂(g) = 39 × 体积(L) &emsp; 琼脂(g) = 15 × 体积(L)'
+    : 'PDB粉剂(g) = 26 × 体积(L)';
+}
+
+// --- MM ---
+function calcMM() {
+  const v = parseFloat(document.getElementById('mm-vol').value) || 0;
+  const glu = parseFloat(document.getElementById('mm-glu').value) || 0;
+  document.getElementById('mm-k2hpo4').textContent = (7.0 * v).toFixed(2) + ' g';
+  document.getElementById('mm-kh2po4').textContent = (2.0 * v).toFixed(2) + ' g';
+  document.getElementById('mm-nh4').textContent = (1.0 * v).toFixed(2) + ' g';
+  document.getElementById('mm-citrate').textContent = (0.5 * v).toFixed(2) + ' g';
+  document.getElementById('mm-mgso4').textContent = (0.1 * v).toFixed(2) + ' g';
+  document.getElementById('mm-water').textContent = (1000 * v).toFixed(0) + ' mL';
+  const gluRow = document.getElementById('mm-glu-row');
+  if (glu > 0) {
+    gluRow.style.display = 'flex';
+    document.getElementById('mm-glucose').textContent = (glu * 10 * v).toFixed(2) + ' g';
+  } else {
+    gluRow.style.display = 'none';
+  }
+}
+
+// --- TSB / TSA ---
+function calcTSB() {
+  const v = parseFloat(document.getElementById('tsb-vol').value) || 0;
+  document.getElementById('tsb-powder').textContent = (7.5 * v).toFixed(1) + ' g';
+  document.getElementById('tsb-agar').textContent = (15 * v).toFixed(1) + ' g';
+  document.getElementById('tsb-water').textContent = (1000 * v).toFixed(0) + ' mL';
+  document.getElementById('tsb-formula').textContent = mediaState.tsb
+    ? 'TSB粉剂(g) = 7.5 × 体积(L) &emsp; 琼脂(g) = 15 × 体积(L)'
+    : 'TSB粉剂(g) = 7.5 × 体积(L)';
+}
+
+// --- LB / LBA ---
+function calcLB() {
+  const v = parseFloat(document.getElementById('lb-vol').value) || 0;
+  document.getElementById('lb-tryp').textContent = (10.0 * v).toFixed(1) + ' g';
+  document.getElementById('lb-yeast').textContent = (5.0 * v).toFixed(1) + ' g';
+  document.getElementById('lb-nacl').textContent = (10.0 * v).toFixed(1) + ' g';
+  document.getElementById('lb-agar').textContent = (15.0 * v).toFixed(1) + ' g';
+  document.getElementById('lb-water').textContent = (1000 * v).toFixed(0) + ' mL';
+  document.getElementById('lb-formula').textContent = mediaState.lb
+    ? '胰蛋白胨(g) = 10 × 体积(L) &emsp; 酵母(g) = 5 × 体积(L) &emsp; NaCl(g) = 10 × 体积(L) &emsp; 琼脂(g) = 15 × 体积(L)'
+    : '胰蛋白胨(g) = 10 × 体积(L) &emsp; 酵母(g) = 5 × 体积(L) &emsp; NaCl(g) = 10 × 体积(L)';
+}
+
+// --- R2A ---
+function calcR2A() {
+  const v = parseFloat(document.getElementById('r2a-vol').value) || 0;
+  document.getElementById('r2a-yeast').textContent = (0.5 * v).toFixed(2) + ' g';
+  document.getElementById('r2a-peptone').textContent = (0.5 * v).toFixed(2) + ' g';
+  document.getElementById('r2a-casamino').textContent = (0.5 * v).toFixed(2) + ' g';
+  document.getElementById('r2a-glucose').textContent = (0.5 * v).toFixed(2) + ' g';
+  document.getElementById('r2a-starch').textContent = (0.5 * v).toFixed(2) + ' g';
+  document.getElementById('r2a-pyruvate').textContent = (0.3 * v).toFixed(2) + ' g';
+  document.getElementById('r2a-k2hpo4').textContent = (0.3 * v).toFixed(2) + ' g';
+  document.getElementById('r2a-mgso4').textContent = (0.05 * v).toFixed(3) + ' g';
+  document.getElementById('r2a-agar').textContent = (15.0 * v).toFixed(1) + ' g';
+  document.getElementById('r2a-water').textContent = (1000 * v).toFixed(0) + ' mL';
+}
+
+// --- KB ---
+function calcKB() {
+  const v = parseFloat(document.getElementById('kb-vol').value) || 0;
+  document.getElementById('kb-peptone').textContent = (20.0 * v).toFixed(1) + ' g';
+  document.getElementById('kb-glycerol').textContent = (10.0 * v).toFixed(1) + ' mL';
+  document.getElementById('kb-k2hpo4').textContent = (1.5 * v).toFixed(2) + ' g';
+  document.getElementById('kb-mgso4').textContent = (1.5 * v).toFixed(2) + ' g';
+  document.getElementById('kb-agar').textContent = (15.0 * v).toFixed(1) + ' g';
+  document.getElementById('kb-water').textContent = (1000 * v).toFixed(0) + ' mL';
+}
+
+// --- 1/2 MS ---
+function calcMS() {
+  const v = parseFloat(document.getElementById('ms-vol').value) || 0;
+  document.getElementById('ms-salt').textContent = (2.15 * v).toFixed(2) + ' g';
+  document.getElementById('ms-sucrose').textContent = (15.0 * v).toFixed(1) + ' g';
+  document.getElementById('ms-agar').textContent = (8.0 * v).toFixed(1) + ' g';
+  document.getElementById('ms-water').textContent = (1000 * v).toFixed(0) + ' mL';
+}
+
+// --- V8 (2× 母液稀释) ---
+function calcV8() {
+  const v = parseFloat(document.getElementById('v8-vol').value) || 0;
+  document.getElementById('v8-stock').textContent = (v * 500).toFixed(0) + ' mL';
+  document.getElementById('v8-agar').textContent = (15.0 * v).toFixed(1) + ' g';
+  document.getElementById('v8-water').textContent = (v * 500).toFixed(0) + ' mL';
+}
+
+// --- V8 自配法 ---
+function calcV8diy() {
+  const v = parseFloat(document.getElementById('v8-diy-vol').value) || 0;
+  document.getElementById('v8-diy-juice').textContent = (200 * v).toFixed(0) + ' mL';
+  document.getElementById('v8-diy-caco3').textContent = (3.0 * v).toFixed(1) + ' g';
+  document.getElementById('v8-diy-agar').textContent = (15.0 * v).toFixed(1) + ' g';
+  document.getElementById('v8-diy-water').textContent = (800 * v).toFixed(0) + ' mL';
+}
+
+// --- MgCl2 ---
+function calcMgCl2() {
+  const v = parseFloat(document.getElementById('mgcl2-vol').value) || 0;
+  document.getElementById('mgcl2-powder').textContent = (2.033 * v).toFixed(3) + ' g';
+  document.getElementById('mgcl2-water').textContent = (1000 * v).toFixed(0) + ' mL';
+}
+
+// --- HgCl2 ---
+function calcHgCl2() {
+  const v = parseFloat(document.getElementById('hg-vol').value) || 0;
+  document.getElementById('hg-powder').textContent = (1.0 * v).toFixed(3) + ' g';
+  document.getElementById('hg-water').textContent = (1000 * v).toFixed(0) + ' mL';
+}
+
+// --- NaClO ---
+function calcNaClO() {
+  const stock = parseFloat(document.getElementById('naclo-stock').value) || 1;
+  const target = parseFloat(document.getElementById('naclo-target').value) || 0;
+  const vol = parseFloat(document.getElementById('naclo-vol').value) || 0;
+  const stockVol = (target * vol) / stock;
+  document.getElementById('naclo-stock-vol').textContent = stockVol.toFixed(1) + ' mL';
+  document.getElementById('naclo-water-vol').textContent = vol.toFixed(0) + ' mL';
+}
+
+// --- Bm Spore ---
+function calcBmSpore() {
+  const target = parseFloat(document.getElementById('bm-target').value) || 0;
+  const vol = parseFloat(document.getElementById('bm-vol').value) || 0;
+  const stock = parseFloat(document.getElementById('bm-stock').value) || 1;
+  const stockVol = (target * vol) / stock;
+  document.getElementById('bm-stock-vol').textContent = stockVol.toFixed(1) + ' mL';
+  document.getElementById('bm-water-vol').textContent = vol.toFixed(0) + ' mL';
+}
+
+// --- 12HEA ---
+function calc12HEA() {
+  const conc = parseFloat(document.getElementById('hea-conc').value) || 0;
+  const vol = parseFloat(document.getElementById('hea-vol').value) || 0;
+  const mw = parseFloat(document.getElementById('hea-mw').value) || 240.37;
+  const mg = (conc * vol * mw) / 1000;
+  document.getElementById('hea-powder').textContent = mg.toFixed(3) + ' mg';
+  document.getElementById('hea-dmso').textContent = vol.toFixed(1) + ' mL';
+}
+
+function calc12HEAwork() {
+  const wc = parseFloat(document.getElementById('hea-wc').value) || 0;
+  const wv = parseFloat(document.getElementById('hea-wv').value) || 0;
+  const sc = parseFloat(document.getElementById('hea-sc').value) || 1;
+  const stockVol = (wc * wv) / sc / 1000;
+  document.getElementById('hea-work-stock').textContent = stockVol.toFixed(1) + ' μL';
+  const dmsoPct = (stockVol / (wv * 1000) * 100);
+  document.getElementById('hea-work-dmso').textContent = dmsoPct.toFixed(4) + '%';
+}
+
+// --- Tween-20 ---
+function calcTween() {
+  const target = parseFloat(document.getElementById('tw-conc').value) || 0;
+  const vol = parseFloat(document.getElementById('tw-vol').value) || 0;
+  const stock = parseFloat(document.getElementById('tw-stock').value) || 1;
+  const stockVol = (target * vol) / stock;
+  document.getElementById('tw-stock-vol').textContent = stockVol.toFixed(2) + ' mL';
+  document.getElementById('tw-water-vol').textContent = vol.toFixed(0) + ' mL';
+}
+
+// --- Antibiotics ---
+function calcAbx() {
+  const sel = document.getElementById('abx-type');
+  const opt = sel.options[sel.selectedIndex];
+  const conc = parseFloat(opt.value) || 100;
+  const solvent = opt.dataset.solvent || 'ddH₂O';
+  const vol = parseFloat(document.getElementById('abx-vol').value) || 0;
+  document.getElementById('abx-powder').textContent = (conc * vol).toFixed(0) + ' mg';
+  document.getElementById('abx-solvent').textContent = vol.toFixed(1) + ' mL ' + solvent;
+}
+
+// --- PBS ---
+function calcPBS() {
+  const v = parseFloat(document.getElementById('pbs-vol').value) || 0;
+  document.getElementById('pbs-nacl').textContent = (8.0 * v).toFixed(1) + ' g';
+  document.getElementById('pbs-kcl').textContent = (0.2 * v).toFixed(2) + ' g';
+  document.getElementById('pbs-na2hpo4').textContent = (1.44 * v).toFixed(2) + ' g';
+  document.getElementById('pbs-kh2po4').textContent = (0.24 * v).toFixed(2) + ' g';
+  document.getElementById('pbs-water').textContent = (1000 * v).toFixed(0) + ' mL';
+}
+
+// --- Taq PCR ---
+function calcTaq() {
+  const n = parseInt(document.getElementById('taq-n').value) || 1;
+  const v = parseFloat(document.getElementById('taq-vol').value) || 25;
+  const f = 1.1; // 10% 余量
+  const scale = v / 25; // 相对于标准 25 μL 体系的倍数
+  document.getElementById('taq-buf').textContent = (2.5 * scale * n * f).toFixed(1) + ' μL';
+  document.getElementById('taq-dntp').textContent = (0.5 * scale * n * f).toFixed(1) + ' μL';
+  document.getElementById('taq-fp').textContent = (1.0 * scale * n * f).toFixed(1) + ' μL';
+  document.getElementById('taq-rp').textContent = (1.0 * scale * n * f).toFixed(1) + ' μL';
+  document.getElementById('taq-enzyme').textContent = (0.25 * scale * n * f).toFixed(2) + ' μL';
+  const mmTotal = (2.5 + 0.5 + 1.0 + 1.0 + 0.25) * scale * n * f;
+  const waterPerRx = v - (2.5 + 0.5 + 1.0 + 1.0 + 0.25 + 1.0) * scale;
+  document.getElementById('taq-water').textContent = (waterPerRx * n * f).toFixed(1) + ' μL';
+  document.getElementById('taq-mm').textContent = mmTotal.toFixed(1) + ' μL';
+}
+
+// --- Phusion PCR ---
+function calcPhusion() {
+  const n = parseInt(document.getElementById('phu-n').value) || 1;
+  const v = parseFloat(document.getElementById('phu-vol').value) || 50;
+  const f = 1.1;
+  const scale = v / 50;
+  document.getElementById('phu-buf').textContent = (10.0 * scale * n * f).toFixed(1) + ' μL';
+  document.getElementById('phu-dntp').textContent = (1.0 * scale * n * f).toFixed(1) + ' μL';
+  document.getElementById('phu-fp').textContent = (2.5 * scale * n * f).toFixed(1) + ' μL';
+  document.getElementById('phu-rp').textContent = (2.5 * scale * n * f).toFixed(1) + ' μL';
+  document.getElementById('phu-enzyme').textContent = (0.5 * scale * n * f).toFixed(1) + ' μL';
+  const mmTotal = (10.0 + 1.0 + 2.5 + 2.5 + 0.5) * scale * n * f;
+  const waterPerRx = v - (10.0 + 1.0 + 2.5 + 2.5 + 0.5 + 1.0) * scale;
+  document.getElementById('phu-water').textContent = (waterPerRx * n * f).toFixed(1) + ' μL';
+  document.getElementById('phu-mm').textContent = mmTotal.toFixed(1) + ' μL';
+}
+
+// --- dNTP Mix ---
+function calcDNTP() {
+  const vol = parseFloat(document.getElementById('dntp-vol').value) || 100;
+  const conc = parseFloat(document.getElementById('dntp-conc').value) || 10;
+  const stock = parseFloat(document.getElementById('dntp-stock').value) || 100;
+  const eachVol = (conc * vol) / stock;
+  const water = vol - eachVol * 4;
+  document.getElementById('dntp-datp').textContent = eachVol.toFixed(1) + ' μL';
+  document.getElementById('dntp-dttp').textContent = eachVol.toFixed(1) + ' μL';
+  document.getElementById('dntp-dctp').textContent = eachVol.toFixed(1) + ' μL';
+  document.getElementById('dntp-dgtp').textContent = eachVol.toFixed(1) + ' μL';
+  document.getElementById('dntp-water').textContent = water.toFixed(1) + ' μL';
+}
+
+// --- Agarose Gel ---
+function calcGel() {
+  const pct = parseFloat(document.getElementById('gel-pct').value) || 1.0;
+  const vol = parseFloat(document.getElementById('gel-vol').value) || 100;
+  const agarose = (pct / 100) * vol;
+  const dyeVol = vol / 10000 * 1000; // 1:10000 → μL
+  document.getElementById('gel-agarose').textContent = agarose.toFixed(2) + ' g';
+  document.getElementById('gel-tae').textContent = vol.toFixed(0) + ' mL';
+  document.getElementById('gel-dye').textContent = (vol * 0.1).toFixed(1) + ' μL (1:10000)';
+}
+
+// Init all
+calcPDA(); calcMM(); calcTSB(); calcLB(); calcR2A(); calcKB(); calcMS(); calcV8(); calcV8diy(); calcMgCl2(); calcHgCl2(); calcNaClO(); calcBmSpore(); calc12HEA(); calc12HEAwork(); calcTween(); calcAbx(); calcPBS(); calcTaq(); calcPhusion(); calcDNTP(); calcGel();
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    document.getElementById('searchInput').focus();
+  }
+  if (e.key === 'Escape') {
+    const si = document.getElementById('searchInput');
+    if (si === document.activeElement) {
+      clearSearch();
+      si.blur();
+    }
+  }
+});
+</script>
+</body>
+</html>
