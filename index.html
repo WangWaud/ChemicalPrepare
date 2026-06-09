@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>实验室试剂配方计算器</title>
+  <title>实验室配方与实验流程</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -534,39 +534,17 @@
     .recipe-card.search-match { border-color: var(--accent); }
     .recipe-card.search-match .recipe-header { background: rgba(37,99,235,0.04); }
 
-    /* Footer / Recent Updates */
-    .footer {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 2rem 2rem 3rem;
-      border-top: 1px solid var(--border);
-    }
-    .footer-title {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-dim);
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .footer-title::before {
-      content: '';
-      width: 3px;
-      height: 14px;
-      background: var(--accent);
-      border-radius: 2px;
-    }
+    /* Update List */
     .update-list {
-      list-style: none;
-      padding: 0;
+      display: flex;
+      flex-direction: column;
       margin: 0;
     }
     .update-item {
       display: flex;
       gap: 0.75rem;
-      padding: 0.5rem 0;
-      font-size: 0.82rem;
+      padding: 0.7rem 0;
+      font-size: 0.85rem;
       align-items: baseline;
     }
     .update-item:not(:last-child) {
@@ -574,7 +552,7 @@
     }
     .update-date {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       color: var(--text-muted);
       white-space: nowrap;
       min-width: 80px;
@@ -693,24 +671,229 @@
       white-space: nowrap;
     }
 
+    /* Protocol Sections */
+    .protocol-section {
+      margin-bottom: 1.5rem;
+    }
+    .protocol-section:last-child {
+      margin-bottom: 0;
+    }
+    .protocol-section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .protocol-section-title::before {
+      content: '';
+      width: 3px;
+      height: 14px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    .protocol-purpose {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      line-height: 1.8;
+      padding: 0.8rem 1rem;
+      background: rgba(37,99,235,0.04);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+    .protocol-principle {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      line-height: 1.8;
+      padding: 0.8rem 1rem;
+      background: var(--bg-input);
+      border-radius: var(--radius-sm);
+    }
+    .protocol-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+    .protocol-references ol {
+      margin: 0;
+      padding-left: 1.5rem;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.8;
+    }
+    .protocol-references li {
+      margin-bottom: 0.3rem;
+    }
+
+    /* Protocol Meta Info */
+    .protocol-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding: 0.6rem 0.8rem;
+      background: var(--bg-input);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    .protocol-meta-item {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* Protocol Internal Links */
+    .protocol-link {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(37,99,235,0.4);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .protocol-link:hover {
+      color: var(--accent-dim);
+      border-bottom-color: var(--accent-dim);
+      background: rgba(37,99,235,0.06);
+    }
+
+    /* Protocol Step Groups */
+    .protocol-step-group {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .protocol-step-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.8rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .protocol-substep-group {
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+    }
+    .protocol-substep-group:last-child {
+      margin-bottom: 0;
+    }
+    .protocol-substep-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 0.6rem;
+    }
+
     /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #c4cad4; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #9aa3b0; }
+
+    /* Back to Protocol Button */
+    .back-to-protocol {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+      transition: all 0.3s ease;
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      z-index: 1000;
+    }
+    .back-to-protocol.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .back-to-protocol:hover {
+      background: var(--accent-dim);
+      box-shadow: 0 6px 16px rgba(37,99,235,0.4);
+      transform: translateY(-2px);
+    }
+    .back-to-protocol:active {
+      transform: translateY(0);
+    }
+    .back-to-protocol svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    /* Scroll to Top Button */
+    .scroll-to-top {
+      position: fixed;
+      bottom: 2rem;
+      left: 2rem;
+      background: var(--bg-card);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      z-index: 1000;
+    }
+    .scroll-to-top.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .scroll-to-top:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+      transform: translateY(-2px);
+    }
+    .scroll-to-top:active {
+      transform: translateY(0);
+    }
+    .scroll-to-top svg {
+      width: 20px;
+      height: 20px;
+    }
   </style>
 </head>
 <body>
 <div class="app">
   <div class="header">
-    <h1>实验室试剂配方计算器</h1>
-    <p>Plant Pathology Lab — Reagent Preparation Guide</p>
+    <h1>实验室配方与实验流程</h1>
+    <p>Plant Pathology Lab — Reagent Preparation &amp; Protocol Guide</p>
+    <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.4rem;">最近更新时间：2026-06-04</p>
   </div>
 
   <div class="search-wrap">
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" class="search-input" id="searchInput" placeholder="搜索试剂、培养基、配方…（如 PDA、12HEA、抗生素）" oninput="onSearch()" />
+      <input type="text" class="search-input" id="searchInput" placeholder="搜索试剂、培养基、Protocol…（如 PDA、12HEA、抗生素、种子包衣）" oninput="onSearch()" />
       <button class="search-clear" id="searchClear" onclick="clearSearch()">×</button>
     </div>
     <div class="search-results-info" id="searchResultsInfo"></div>
@@ -722,8 +905,11 @@
     <button class="nav-btn" data-panel="suspension">菌悬液制备</button>
     <button class="nav-btn" data-panel="metabolite">代谢物处理</button>
     <button class="nav-btn" data-panel="stock">母液配制</button>
+    <button class="nav-btn" data-panel="buffer">缓冲液</button>
     <button class="nav-btn" data-panel="pcr">PCR 反应</button>
     <button class="nav-btn" data-panel="memo">备忘录</button>
+    <button class="nav-btn" data-panel="protocol">Protocol</button>
+    <button class="nav-btn" data-panel="changelog">最近更新</button>
   </nav>
 
   <div class="main">
@@ -731,7 +917,7 @@
     <!-- ==================== 培养基 ==================== -->
     <div class="panel active" id="panel-media">
 
-      <div class="recipe-card open" id="card-pda">
+      <div class="recipe-card" id="card-pda">
         <div class="recipe-header" onclick="toggleCard('card-pda')">
           <div class="recipe-icon" style="background:rgba(180,83,9,0.1);color:var(--yellow);">🧫</div>
           <div>
@@ -1554,71 +1740,12 @@
         </div>
       </div>
 
-      <!-- 10 mM MgCl₂ 缓冲液 -->
-      <div class="recipe-card" id="card-mgcl2">
-        <div class="recipe-header" onclick="toggleCard('card-mgcl2')">
-          <div class="recipe-icon" style="background:rgba(8,145,178,0.1);color:var(--cyan);">💧</div>
-          <div>
-            <div class="recipe-title">10 mM MgCl₂ 缓冲液</div>
-            <div class="recipe-subtitle">氯化镁溶液 — 孢子悬浮液配制与稀释</div>
-          </div>
-          <span class="recipe-toggle">▾</span>
-        </div>
-        <div class="recipe-body">
-          <div class="recipe-content">
-            <div class="desc">
-              10 mM MgCl₂ 是配制真菌孢子悬浮液的常用缓冲液，相比纯水能更好地维持孢子活力和渗透压平衡。用于 <em>Bipolaris maydis</em> 分生孢子悬浮液的配制和梯度稀释。
-            </div>
-
-            <div class="quick-ref">
-              <div class="quick-ref-item"><div class="quick-ref-label">工作浓度</div><div class="quick-ref-value">10 mM</div></div>
-              <div class="quick-ref-item"><div class="quick-ref-label">MgCl₂·6H₂O MW</div><div class="quick-ref-value">203.30</div></div>
-              <div class="quick-ref-item"><div class="quick-ref-label">每升称量</div><div class="quick-ref-value">2.033 g</div></div>
-              <div class="quick-ref-item"><div class="quick-ref-label">灭菌方式</div><div class="quick-ref-value">121°C 15min</div></div>
-            </div>
-
-            <div class="calc-section">
-              <div class="calc-title">用量计算器</div>
-              <div class="formula">MgCl₂·6H₂O (g) = 2.033 × 体积(L)</div>
-              <div class="input-row">
-                <span class="input-label">配制体积</span>
-                <input type="number" class="input-field" id="mgcl2-vol" value="1" min="0" step="0.1" oninput="calcMgCl2()" />
-                <span class="input-unit">L</span>
-              </div>
-              <div class="result-box" id="mgcl2-result">
-                <div class="result-title">▸ 称量清单</div>
-                <div class="result-item"><span class="result-name">MgCl₂·6H₂O</span><span class="result-value" id="mgcl2-powder">2.033 g</span></div>
-                <div class="result-item"><span class="result-name">蒸馏水</span><span class="result-value" id="mgcl2-water">1000 mL</span></div>
-              </div>
-            </div>
-
-            <div class="divider">配制步骤</div>
-            <ol class="steps">
-              <li>称取 MgCl₂·6H₂O，加入蒸馏水中搅拌溶解。</li>
-              <li>定容至终体积。</li>
-              <li>121°C 高压灭菌 15 min，或 0.22 μm 滤膜过滤除菌。</li>
-              <li>室温保存，使用前检查无沉淀。</li>
-            </ol>
-
-            <div class="box warn">
-              <div class="box-title">⚠ 注意事项</div>
-              <ul>
-                <li>MgCl₂·6H₂O 易潮解，开瓶后尽快使用，称量时动作要快。</li>
-                <li>配制孢子悬浮液时，加入 0.05% Tween-20 助悬效果更好。</li>
-                <li>也可用无菌水代替 MgCl₂ 配制孢子液，但 MgCl₂ 能更好维持孢子活力。</li>
-                <li>10 mM MgCl₂ 渗透压接近生理条件，适合短期保存孢子。</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
 
     <!-- ==================== 消毒试剂 ==================== -->
     <div class="panel" id="panel-disinfection">
 
-      <div class="recipe-card open" id="card-hgcl2">
+      <div class="recipe-card" id="card-hgcl2">
         <div class="recipe-header" onclick="toggleCard('card-hgcl2')">
           <div class="recipe-icon" style="background:rgba(220,38,38,0.1);color:var(--red);">☠️</div>
           <div>
@@ -1772,7 +1899,7 @@
     <!-- ==================== 菌悬液制备 ==================== -->
     <div class="panel" id="panel-suspension">
 
-      <div class="recipe-card open" id="card-bm-spore">
+      <div class="recipe-card" id="card-bm-spore">
         <div class="recipe-header" onclick="toggleCard('card-bm-spore')">
           <div class="recipe-icon" style="background:rgba(180,83,9,0.1);color:var(--yellow);">🍄</div>
           <div>
@@ -1922,7 +2049,7 @@
     <!-- ==================== 代谢物处理 ==================== -->
     <div class="panel" id="panel-metabolite">
 
-      <div class="recipe-card open" id="card-12hea">
+      <div class="recipe-card" id="card-12hea">
         <div class="recipe-header" onclick="toggleCard('card-12hea')">
           <div class="recipe-icon" style="background:rgba(234,88,12,0.1);color:var(--orange);">💊</div>
           <div>
@@ -2061,7 +2188,7 @@
     <!-- ==================== 母液配制 ==================== -->
     <div class="panel" id="panel-stock">
 
-      <div class="recipe-card open" id="card-tween">
+      <div class="recipe-card" id="card-tween">
         <div class="recipe-header" onclick="toggleCard('card-tween')">
           <div class="recipe-icon" style="background:rgba(8,145,178,0.1);color:var(--cyan);">💧</div>
           <div>
@@ -2115,7 +2242,7 @@
           <div class="recipe-icon" style="background:rgba(124,58,237,0.1);color:var(--purple);">💉</div>
           <div>
             <div class="recipe-title">常用抗生素母液</div>
-            <div class="recipe-subtitle">Amp / Kan / Rif / Cm / Tet / Spec / Gm / Sm / Carb / Ny</div>
+            <div class="recipe-subtitle">Amp / Kan / Rif / Cm / Tet / Spec / Gm / Sm / Carb / Pip / Ny</div>
           </div>
           <span class="recipe-toggle">▾</span>
         </div>
@@ -2130,6 +2257,7 @@
                 <tr>
                   <th>抗生素</th>
                   <th>缩写</th>
+                  <th>类型</th>
                   <th>母液浓度</th>
                   <th>工作浓度</th>
                   <th>溶剂</th>
@@ -2140,60 +2268,77 @@
               <tbody>
                 <tr>
                   <td>Ampicillin</td><td class="mono">Amp</td>
+                  <td>β-内酰胺类</td>
                   <td class="mono">100 mg/mL</td><td class="mono">100 μg/mL</td>
                   <td>ddH₂O</td><td>-20°C</td>
                   <td>革兰氏阳性菌筛选</td>
                 </tr>
                 <tr>
                   <td>Carbenicillin</td><td class="mono">Carb</td>
+                  <td>β-内酰胺类</td>
                   <td class="mono">100 mg/mL</td><td class="mono">100 μg/mL</td>
                   <td>ddH₂O</td><td>-20°C</td>
                   <td>Amp 替代，更稳定</td>
                 </tr>
                 <tr>
+                  <td>Piperacillin</td><td class="mono">Pip</td>
+                  <td>β-内酰胺类</td>
+                  <td class="mono">50 mg/mL</td><td class="mono">50 μg/mL</td>
+                  <td>ddH₂O</td><td>-20°C</td>
+                  <td>广谱，抗铜绿假单胞菌</td>
+                </tr>
+                <tr>
                   <td>Kanamycin</td><td class="mono">Kan</td>
+                  <td>氨基糖苷类</td>
                   <td class="mono">50 mg/mL</td><td class="mono">50 μg/mL</td>
                   <td>ddH₂O</td><td>-20°C</td>
                   <td>广谱，常用筛选标记</td>
                 </tr>
                 <tr>
                   <td>Gentamicin</td><td class="mono">Gm</td>
+                  <td>氨基糖苷类</td>
                   <td class="mono">50 mg/mL</td><td class="mono">50 μg/mL</td>
                   <td>ddH₂O</td><td>-20°C</td>
                   <td>革兰氏阴性菌筛选</td>
                 </tr>
                 <tr>
                   <td>Streptomycin</td><td class="mono">Sm</td>
-                  <td class="mono">100 mg/mL</td><td class="mono">100 μg/mL</td>
+                  <td>氨基糖苷类</td>
+                  <td class="mono">50 mg/mL</td><td class="mono">50 μg/mL</td>
                   <td>ddH₂O</td><td>-20°C</td>
                   <td>植物病原菌筛选</td>
                 </tr>
                 <tr>
                   <td>Spectinomycin</td><td class="mono">Spec</td>
+                  <td>氨基糖苷类</td>
                   <td class="mono">100 mg/mL</td><td class="mono">100 μg/mL</td>
                   <td>ddH₂O</td><td>-20°C</td>
                   <td>植物病原菌筛选</td>
                 </tr>
                 <tr>
                   <td>Rifampicin</td><td class="mono">Rif</td>
+                  <td>利福霉素类</td>
                   <td class="mono">50 mg/mL</td><td class="mono">50 μg/mL</td>
                   <td>DMSO</td><td>-20°C 避光</td>
                   <td>革兰氏阴性菌，内生菌筛选</td>
                 </tr>
                 <tr>
                   <td>Chloramphenicol</td><td class="mono">Cm</td>
+                  <td>氯霉素类</td>
                   <td class="mono">34 mg/mL</td><td class="mono">34 μg/mL</td>
                   <td>乙醇</td><td>-20°C</td>
                   <td>广谱，低背景筛选</td>
                 </tr>
                 <tr>
                   <td>Tetracycline</td><td class="mono">Tet</td>
+                  <td>四环素类</td>
                   <td class="mono">10 mg/mL</td><td class="mono">10 μg/mL</td>
                   <td>乙醇</td><td>-20°C 避光</td>
                   <td>广谱，四环素抗性筛选</td>
                 </tr>
                 <tr>
                   <td>Nystatin</td><td class="mono">Ny</td>
+                  <td>多烯类抗真菌</td>
                   <td class="mono">50 mg/mL</td><td class="mono">50 μg/mL</td>
                   <td>DMSO</td><td>-20°C 避光</td>
                   <td>抗真菌（分离细菌时用）</td>
@@ -2209,9 +2354,10 @@
                 <select class="input-field" id="abx-type" onchange="calcAbx()" style="max-width:260px;">
                   <option value="100" data-solvent="ddH₂O">Ampicillin (100 mg/mL)</option>
                   <option value="100" data-solvent="ddH₂O">Carbenicillin (100 mg/mL)</option>
+                  <option value="50" data-solvent="ddH₂O">Piperacillin (50 mg/mL)</option>
                   <option value="50" data-solvent="ddH₂O">Kanamycin (50 mg/mL)</option>
                   <option value="50" data-solvent="ddH₂O">Gentamicin (50 mg/mL)</option>
-                  <option value="100" data-solvent="ddH₂O">Streptomycin (100 mg/mL)</option>
+                  <option value="50" data-solvent="ddH₂O">Streptomycin (50 mg/mL)</option>
                   <option value="100" data-solvent="ddH₂O">Spectinomycin (100 mg/mL)</option>
                   <option value="50" data-solvent="DMSO">Rifampicin (50 mg/mL)</option>
                   <option value="34" data-solvent="乙醇">Chloramphenicol (34 mg/mL)</option>
@@ -2237,6 +2383,48 @@
               </div>
             </div>
 
+            <div class="calc-section">
+              <div class="calc-title">工作液配制计算器</div>
+              <div class="formula">V<sub>母液</sub>(μL) = [工作浓度(μg/mL) × 培养基体积(mL)] ÷ 母液浓度(mg/mL)</div>
+              <div class="input-row">
+                <span class="input-label">抗生素</span>
+                <select class="input-field" id="ws-type" onchange="onWsTypeChange()" style="max-width:260px;">
+                  <option value="100" data-work="100">Ampicillin (母液 100 mg/mL)</option>
+                  <option value="100" data-work="100">Carbenicillin (母液 100 mg/mL)</option>
+                  <option value="50" data-work="50">Piperacillin (母液 50 mg/mL)</option>
+                  <option value="50" data-work="50">Kanamycin (母液 50 mg/mL)</option>
+                  <option value="50" data-work="50">Gentamicin (母液 50 mg/mL)</option>
+                  <option value="100" data-work="100">Streptomycin (母液 100 mg/mL)</option>
+                  <option value="100" data-work="100">Spectinomycin (母液 100 mg/mL)</option>
+                  <option value="50" data-work="50">Rifampicin (母液 50 mg/mL)</option>
+                  <option value="34" data-work="34">Chloramphenicol (母液 34 mg/mL)</option>
+                  <option value="10" data-work="10">Tetracycline (母液 10 mg/mL)</option>
+                  <option value="50" data-work="50">Nystatin (母液 50 mg/mL)</option>
+                </select>
+              </div>
+              <div class="input-row">
+                <span class="input-label">工作浓度</span>
+                <input type="number" class="input-field" id="ws-work-conc" value="50" min="0" step="5" oninput="calcWs()" />
+                <span class="input-unit">μg/mL</span>
+              </div>
+              <div class="input-row">
+                <span class="input-label">培养基体积</span>
+                <input type="number" class="input-field" id="ws-media-vol" value="100" min="0" step="10" oninput="calcWs()" />
+                <span class="input-unit">mL</span>
+              </div>
+              <div class="result-box" id="ws-result">
+                <div class="result-title">▸ 添加量</div>
+                <div class="result-item">
+                  <span class="result-name">需加母液</span>
+                  <span class="result-value" id="ws-vol">100 μL</span>
+                </div>
+                <div class="result-item">
+                  <span class="result-name">换算</span>
+                  <span class="result-value" id="ws-vol-ml">0.1 mL</span>
+                </div>
+              </div>
+            </div>
+
             <div class="box warn">
               <div class="box-title">⚠ 注意事项</div>
               <ul>
@@ -2251,9 +2439,72 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="recipe-card" id="card-buffer">
-        <div class="recipe-header" onclick="toggleCard('card-buffer')">
+    <!-- ==================== 缓冲液 ==================== -->
+    <div class="panel" id="panel-buffer">
+
+      <!-- 10 mM MgCl₂ 缓冲液 -->
+      <div class="recipe-card" id="card-mgcl2">
+        <div class="recipe-header" onclick="toggleCard('card-mgcl2')">
+          <div class="recipe-icon" style="background:rgba(8,145,178,0.1);color:var(--cyan);">💧</div>
+          <div>
+            <div class="recipe-title">10 mM MgCl₂ 缓冲液</div>
+            <div class="recipe-subtitle">氯化镁溶液 — 孢子悬浮液配制与稀释</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="desc">
+              10 mM MgCl₂ 是配制真菌孢子悬浮液的常用缓冲液，相比纯水能更好地维持孢子活力和渗透压平衡。用于 <em>Bipolaris maydis</em> 分生孢子悬浮液的配制和梯度稀释。
+            </div>
+
+            <div class="quick-ref">
+              <div class="quick-ref-item"><div class="quick-ref-label">工作浓度</div><div class="quick-ref-value">10 mM</div></div>
+              <div class="quick-ref-item"><div class="quick-ref-label">MgCl₂·6H₂O MW</div><div class="quick-ref-value">203.30</div></div>
+              <div class="quick-ref-item"><div class="quick-ref-label">每升称量</div><div class="quick-ref-value">2.033 g</div></div>
+              <div class="quick-ref-item"><div class="quick-ref-label">灭菌方式</div><div class="quick-ref-value">121°C 15min</div></div>
+            </div>
+
+            <div class="calc-section">
+              <div class="calc-title">用量计算器</div>
+              <div class="formula">MgCl₂·6H₂O (g) = 2.033 × 体积(L)</div>
+              <div class="input-row">
+                <span class="input-label">配制体积</span>
+                <input type="number" class="input-field" id="mgcl2-vol" value="1" min="0" step="0.1" oninput="calcMgCl2()" />
+                <span class="input-unit">L</span>
+              </div>
+              <div class="result-box" id="mgcl2-result">
+                <div class="result-title">▸ 称量清单</div>
+                <div class="result-item"><span class="result-name">MgCl₂·6H₂O</span><span class="result-value" id="mgcl2-powder">2.033 g</span></div>
+                <div class="result-item"><span class="result-name">蒸馏水</span><span class="result-value" id="mgcl2-water">1000 mL</span></div>
+              </div>
+            </div>
+
+            <div class="divider">配制步骤</div>
+            <ol class="steps">
+              <li>称取 MgCl₂·6H₂O，加入蒸馏水中搅拌溶解。</li>
+              <li>定容至终体积。</li>
+              <li>121°C 高压灭菌 15 min，或 0.22 μm 滤膜过滤除菌。</li>
+              <li>室温保存，使用前检查无沉淀。</li>
+            </ol>
+
+            <div class="box warn">
+              <div class="box-title">⚠ 注意事项</div>
+              <ul>
+                <li>MgCl₂·6H₂O 易潮解，开瓶后尽快使用，称量时动作要快。</li>
+                <li>配制孢子悬浮液时，加入 0.05% Tween-20 助悬效果更好。</li>
+                <li>也可用无菌水代替 MgCl₂ 配制孢子液，但 MgCl₂ 能更好维持孢子活力。</li>
+                <li>10 mM MgCl₂ 渗透压接近生理条件，适合短期保存孢子。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card" id="card-pbs">
+        <div class="recipe-header" onclick="toggleCard('card-pbs')">
           <div class="recipe-icon" style="background:rgba(37,99,235,0.1);color:var(--accent);">⚗️</div>
           <div>
             <div class="recipe-title">PBS 磷酸缓冲液</div>
@@ -2353,7 +2604,7 @@
     <div class="panel" id="panel-pcr">
 
       <!-- Taq PCR -->
-      <div class="recipe-card open" id="card-taq">
+      <div class="recipe-card" id="card-taq">
         <div class="recipe-header" onclick="toggleCard('card-taq')">
           <div class="recipe-icon" style="background:rgba(234,88,12,0.1);color:var(--orange);">🔥</div>
           <div>
@@ -2728,55 +2979,792 @@
       </div>
     </div>
 
+    <!-- ==================== Protocol ==================== -->
+    <div class="panel" id="panel-protocol">
+
+      <!-- Protocol 1: 种子消毒与细菌接种 -->
+      <div class="recipe-card" id="card-proto-seed">
+        <div class="recipe-header" onclick="toggleCard('card-proto-seed')">
+          <div class="recipe-icon" style="background:rgba(22,163,74,0.1);color:var(--green);">🌱</div>
+          <div>
+            <div class="recipe-title">种子消毒与细菌接种</div>
+            <div class="recipe-subtitle">Seed Sterilization &amp; Bacterial Inoculation — 玉米种子表面消毒 + Sphingobium 滚转接种</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+
+            <div class="protocol-tags">
+              <span class="tag blue">实验操作</span>
+              <span class="tag green">接种流程</span>
+              <span class="tag purple">玉米</span>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">目的</div>
+              <div class="protocol-purpose">对玉米种子进行表面消毒后，预萌发 2 天，再用 Sphingobium 菌悬液滚转接种，建立植物-微生物互作实验体系。</div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">原理</div>
+              <div class="protocol-principle">HgCl₂ 是强效表面消毒剂，可杀灭种子表面附着的微生物。预萌发使种皮打开、胚根伸出，增加细菌附着位点。滚转接种法通过物理接触使细菌均匀附着于种子表面，模拟自然条件下种子携带微生物的过程。</div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">材料试剂</div>
+              <table class="comp-table">
+                <thead><tr><th>名称</th><th>规格/浓度</th><th>用量</th><th>备注</th></tr></thead>
+                <tbody>
+                  <tr><td>玉米种子</td><td class="mono">—</td><td class="mono">每处理 15 粒</td><td>表面消毒前去壳</td></tr>
+                  <tr><td>HgCl₂ 消毒液</td><td class="mono">0.1% (w/v)</td><td class="mono">适量</td><td>见消毒试剂标签页</td></tr>
+                  <tr><td>无菌蒸馏水</td><td class="mono">—</td><td class="mono">适量</td><td>冲洗用</td></tr>
+                  <tr><td>Sphingobium 菌悬液</td><td class="mono">OD₆₀₀ = 0.5</td><td class="mono">适量</td><td>见菌悬液制备标签页</td></tr>
+                  <tr><td>1/2 TSB 培养基</td><td class="mono">—</td><td class="mono">适量</td><td>见培养基标签页</td></tr>
+                  <tr><td>无菌营养土</td><td class="mono">—</td><td class="mono">适量</td><td>播种用</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">设备</div>
+              <table class="comp-table">
+                <thead><tr><th>设备名称</th><th>型号/规格</th><th>用途</th></tr></thead>
+                <tbody>
+                  <tr><td>超净工作台</td><td class="mono">—</td><td>无菌操作</td></tr>
+                  <tr><td>恒温摇床</td><td class="mono">28°C, 100 rpm</td><td>滚转接种</td></tr>
+                  <tr><td>培养箱</td><td class="mono">25°C</td><td>种子萌发</td></tr>
+                  <tr><td>无菌培养皿</td><td class="mono">9 cm</td><td>萌发和接种容器</td></tr>
+                  <tr><td>无菌滤纸</td><td class="mono">—</td><td>吸去多余菌液</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">操作步骤</div>
+              <ol class="steps">
+                <li><strong>种子准备</strong>：选取饱满、无破损的玉米种子，手工去壳（保留种皮完整）。</li>
+                <li><strong>表面消毒</strong>：在超净台中，将种子浸入 0.1% HgCl₂ 溶液中，浸泡 2-3 min，轻轻摇动。</li>
+                <li><strong>冲洗</strong>：用无菌蒸馏水冲洗种子 3-5 次，每次 1 min，彻底去除残留 HgCl₂。</li>
+                <li><strong>预萌发</strong>：将消毒种子置于铺有湿润无菌滤纸的培养皿中，25°C 暗培养 2 天，至胚根伸出约 2-3 mm。</li>
+                <li><strong>菌悬液制备</strong>：提前过夜培养 Sphingobium，调节 OD₆₀₀ = 0.5（详见菌悬液制备标签页）。</li>
+                <li><strong>滚转接种</strong>：将预萌发种子转入含菌悬液的无菌容器中，28°C、100 rpm 振荡 1 h。</li>
+                <li><strong>取出播种</strong>：用无菌镊子取出种子，无菌滤纸吸去多余液体，立即播种至无菌营养土中。</li>
+                <li><strong>对照设置</strong>：未接种对照组用等量无菌水（或 1/2 TSB）代替菌悬液，其余操作相同。</li>
+              </ol>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">预期结果</div>
+              <div class="box success">
+                <div class="box-title">✅ 正常结果</div>
+                <ul>
+                  <li>消毒后种子表面无杂菌污染（可通过对照平板验证）。</li>
+                  <li>预萌发 2 天后胚根伸出 2-3 mm，种皮打开。</li>
+                  <li>接种后种子表面均匀附着细菌（可通过稀释涂布验证接种量）。</li>
+                  <li>播种后 7-14 天，接种组与对照组在株高、根长等表型上可观察到差异。</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">故障排除</div>
+              <table class="comp-table">
+                <thead><tr><th>问题</th><th>可能原因</th><th>解决方案</th></tr></thead>
+                <tbody>
+                  <tr><td>种子消毒后仍有杂菌</td><td>HgCl₂ 浓度不足或浸泡时间不够</td><td>延长浸泡时间至 5 min，或改用 75% 乙醇预处理 1 min</td></tr>
+                  <tr><td>预萌发率低</td><td>种子活力差或温度不适宜</td><td>更换新鲜种子批次，确认 25°C 培养</td></tr>
+                  <tr><td>接种后种子发霉</td><td>消毒不彻底或操作污染</td><td>加强无菌操作，检查 HgCl₂ 有效期</td></tr>
+                  <tr><td>接种组与对照组无差异</td><td>接种量不足或菌株活力差</td><td>确认 OD₆₀₀ = 0.5，使用新鲜过夜培养物</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">注意事项</div>
+              <div class="box warn">
+                <div class="box-title">⚠ 安全与操作注意</div>
+                <ul>
+                  <li><strong>HgCl₂ 有剧毒！</strong>操作必须在通风橱中进行，佩戴双层手套和护目镜。废液收集至专用废液桶。</li>
+                  <li>冲洗步骤务必彻底，残留 HgCl₂ 会抑制种子萌发和细菌生长。</li>
+                  <li>滚转接种时确保菌悬液完全浸没种子，避免部分种子未接触到菌液。</li>
+                  <li>每处理至少 15 粒种子，设置 3 个生物学重复。</li>
+                  <li>记录每批次种子的来源、消毒时间、接种量等关键参数。</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">参考文献</div>
+              <div class="protocol-references">
+                <ol>
+                  <li>实验室内部 Protocol，基于前期实验优化。</li>
+                </ol>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Protocol 2: Bm 接种与发病鉴定 -->
+      <div class="recipe-card" id="card-proto-bm">
+        <div class="recipe-header" onclick="toggleCard('card-proto-bm')">
+          <div class="recipe-icon" style="background:rgba(180,83,9,0.1);color:var(--yellow);">🍄</div>
+          <div>
+            <div class="recipe-title">Bm 接种与发病鉴定</div>
+            <div class="recipe-subtitle">Bipolaris maydis Inoculation &amp; Disease Assessment — 孢子喷雾接种与病情调查</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+
+            <div class="protocol-tags">
+              <span class="tag blue">实验操作</span>
+              <span class="tag yellow">接种鉴定</span>
+              <span class="tag red">病原菌</span>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">目的</div>
+              <div class="protocol-purpose">用 Bipolaris maydis 分生孢子悬浮液喷雾接种玉米幼苗，评价不同处理（如 Sphingobium 预接种）对 Southern Corn Leaf Blight 发病的影响。</div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">原理</div>
+              <div class="protocol-principle">Bm 分生孢子通过喷雾均匀附着于叶片表面，在高湿度条件下萌发侵入叶肉细胞，引起典型病斑。通过标准化接种条件和病情分级，可定量评价不同处理对发病程度的影响。</div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">材料试剂</div>
+              <table class="comp-table">
+                <thead><tr><th>名称</th><th>规格/浓度</th><th>用量</th><th>备注</th></tr></thead>
+                <tbody>
+                  <tr><td>Bm 孢子悬浮液</td><td class="mono">2×10⁵ conidia/mL</td><td class="mono">适量</td><td>见菌悬液制备标签页</td></tr>
+                  <tr><td>10 mM MgCl₂</td><td class="mono">—</td><td class="mono">适量</td><td>孢子悬浮液配制</td></tr>
+                  <tr><td>0.05% Tween-20</td><td class="mono">—</td><td class="mono">适量</td><td>助悬剂</td></tr>
+                  <tr><td>PDA 培养基</td><td class="mono">—</td><td class="mono">适量</td><td>Bm 培养产孢</td></tr>
+                  <tr><td>14 日龄玉米幼苗</td><td class="mono">—</td><td class="mono">每处理 10-15 株</td><td>V2-V3 期</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">设备</div>
+              <table class="comp-table">
+                <thead><tr><th>设备名称</th><th>型号/规格</th><th>用途</th></tr></thead>
+                <tbody>
+                  <tr><td>小型喷雾器</td><td class="mono">—</td><td>喷雾接种</td></tr>
+                  <tr><td>血球计数板</td><td class="mono">Neubauer</td><td>孢子计数</td></tr>
+                  <tr><td>体视显微镜</td><td class="mono">—</td><td>病斑观察</td></tr>
+                  <tr><td>保湿罩/塑料薄膜</td><td class="mono">—</td><td>接种后保湿</td></tr>
+                  <tr><td>培养箱</td><td class="mono">25°C, 12h 光暗</td><td>培养</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">操作步骤</div>
+              <ol class="steps">
+                <li><strong>Bm 培养产孢</strong>：Bm 在 PDA 上 25°C 培养 7-10 d，12h 光暗交替促进产孢。</li>
+                <li><strong>收集孢子</strong>：加入 10 mM MgCl₂（含 0.05% Tween-20），用涂布棒轻柔刮下孢子，两层纱布过滤。</li>
+                <li><strong>计数调节</strong>：血球计数板计数，稀释至 2×10⁵ conidia/mL。</li>
+                <li><strong>接种前准备</strong>：接种前 2 h 停止浇水，使叶面微干利于孢子附着。</li>
+                <li><strong>喷雾接种</strong>：用小型喷雾器将孢子悬浮液均匀喷施于叶片正反面，至叶面微微滴水。</li>
+                <li><strong>保湿培养</strong>：接种后用塑料罩覆盖保湿 24 h（相对湿度 >90%），25°C 暗培养。</li>
+                <li><strong>移除保湿罩</strong>：24 h 后移除保湿罩，恢复正常光照条件（12h 光暗）。</li>
+                <li><strong>对照设置</strong>：对照组喷施等量 10 mM MgCl₂ + 0.05% Tween-20，其余操作相同。</li>
+                <li><strong>病情调查</strong>：接种后 5-7 d 开始调查，记录病斑面积、病级等数据。</li>
+              </ol>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">预期结果</div>
+              <div class="box success">
+                <div class="box-title">✅ 正常结果</div>
+                <ul>
+                  <li>接种后 3-5 d 叶片出现典型褪绿小斑点。</li>
+                  <li>接种后 5-7 d 病斑扩展，呈椭圆形或不规则形，中心灰褐色，边缘黄色晕圈。</li>
+                  <li>对照组无病斑或仅有极轻微症状。</li>
+                  <li>Sphingobium 预接种处理组病斑面积/数量显著低于未预接种组。</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">故障排除</div>
+              <table class="comp-table">
+                <thead><tr><th>问题</th><th>可能原因</th><th>解决方案</th></tr></thead>
+                <tbody>
+                  <tr><td>接种后不发病</td><td>孢子活力差或浓度不足</td><td>使用新鲜孢子（7-10 d 培养物），确认计数准确</td></tr>
+                  <tr><td>发病不均匀</td><td>喷雾不均匀</td><td>分多次喷施，确保叶片正反面均覆盖</td></tr>
+                  <tr><td>对照组也发病</td><td>交叉污染</td><td>接种操作隔离进行，喷雾器使用前充分清洗</td></tr>
+                  <tr><td>发病过重无法区分</td><td>孢子浓度过高</td><td>降低孢子浓度至 1×10⁵ conidia/mL</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">注意事项</div>
+              <div class="box warn">
+                <div class="box-title">⚠ 安全与操作注意</div>
+                <ul>
+                  <li>Bm 是植物病原真菌，操作时避免孢子扩散至非实验区域。接种操作建议在隔离区域进行。</li>
+                  <li>喷雾接种时佩戴口罩，避免吸入孢子。</li>
+                  <li>新鲜孢子悬浮液萌发率最高，建议现配现用（2 h 内）。</li>
+                  <li>保湿期间注意通风时间，避免因过度保湿导致其他杂菌污染。</li>
+                  <li>病情调查时使用标准化分级标准（如 0-5 级或病斑面积百分比），确保数据可比性。</li>
+                  <li>每处理至少 10-15 株，设置 3 个生物学重复。</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">参考文献</div>
+              <div class="protocol-references">
+                <ol>
+                  <li>实验室内部 Protocol，基于前期实验优化。</li>
+                </ol>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Protocol 3: 海藻酸钠-CaCl₂ 交联型细菌种子包衣 -->
+      <div class="recipe-card" id="card-proto-alginate">
+        <div class="recipe-header" onclick="toggleCard('card-proto-alginate')">
+          <div class="recipe-icon" style="background:rgba(124,58,237,0.1);color:var(--purple);">🧪</div>
+          <div>
+            <div class="recipe-title">海藻酸钠-CaCl₂ 交联型细菌种子包衣</div>
+            <div class="recipe-subtitle">Sodium Alginate-CaCl₂ Cross-linked Bacterial Seed Coating — 细菌固定化种子包衣</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+
+            <div class="protocol-tags">
+              <span class="tag blue">实验操作</span>
+              <span class="tag green">种子包衣</span>
+              <span class="tag purple">细菌固定化</span>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">目的</div>
+              <div class="protocol-purpose">利用海藻酸钠与 Ca²⁺ 交联形成凝胶膜，将目标细菌固定/包埋在种子表面，提高细菌在种子表面的附着稳定性和存活率，用于植物促生菌接种、根际定殖菌初筛和生防细菌接种实验。</div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">原理</div>
+              <div class="protocol-principle">海藻酸钠（sodium alginate）是一种天然多糖，与 Ca²⁺ 接触时发生离子交联反应，形成不溶于水的钙海藻酸盐（calcium alginate）凝胶膜。将细菌与海藻酸钠混合后浸泡种子，再用 CaCl₂ 交联，细菌即被包埋固定在种子表面的凝胶层中，显著提高接种效率和稳定性。</div>
+              <div class="formula" style="margin-top:0.8rem;">sodium alginate + Ca²⁺ → calcium alginate gel</div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">快速参考</div>
+              <div class="quick-ref">
+                <div class="quick-ref-item"><div class="quick-ref-label">海藻酸钠原液</div><div class="quick-ref-value">3% w/v</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">CaCl₂ 浓度</div><div class="quick-ref-value">3% w/v</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">混合比例</div><div class="quick-ref-value">海藻酸钠:菌液 = 1:1</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">混合后终浓度</div><div class="quick-ref-value">1.5% 海藻酸钠</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">种子浸泡时间</div><div class="quick-ref-value">30 min</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">CaCl₂ 交联时间</div><div class="quick-ref-value">30 min</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">菌液 OD₆₀₀</div><div class="quick-ref-value">0.5–1.0</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">播种时间</div><div class="quick-ref-value">包衣后当天</div></div>
+              </div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">材料试剂</div>
+              <table class="comp-table">
+                <thead><tr><th>名称</th><th>规格/浓度</th><th>用量</th><th>备注</th></tr></thead>
+                <tbody>
+                  <tr><td>目标菌株</td><td class="mono">—</td><td class="mono">—</td><td>如 Sphingobium、Massilia 等</td></tr>
+                  <tr><td>R2A / 1/2 TSB 培养基</td><td class="mono">—</td><td class="mono">适量</td><td>培养环境/植物相关细菌</td></tr>
+                  <tr><td>Sodium Alginate</td><td class="mono">3% w/v</td><td class="mono">按需</td><td>包衣材料，配制见步骤</td></tr>
+                  <tr><td>CaCl₂</td><td class="mono">3% w/v</td><td class="mono">按需</td><td>交联剂</td></tr>
+                  <tr><td>ddH₂O / Milli-Q 水</td><td class="mono">—</td><td class="mono">适量</td><td>配制海藻酸钠和 CaCl₂</td></tr>
+                  <tr><td>无菌水或 0.85% NaCl</td><td class="mono">—</td><td class="mono">适量</td><td>洗涤菌体</td></tr>
+                  <tr><td>玉米种子</td><td class="mono">—</td><td class="mono">每处理 15 粒</td><td>建议使用同一批次</td></tr>
+                  <tr><td>离心管、烧杯、滤纸等</td><td class="mono">—</td><td class="mono">—</td><td>需灭菌</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">设备</div>
+              <table class="comp-table">
+                <thead><tr><th>设备名称</th><th>型号/规格</th><th>用途</th></tr></thead>
+                <tbody>
+                  <tr><td>离心机</td><td class="mono">—</td><td>收集菌体</td></tr>
+                  <tr><td>恒温摇床</td><td class="mono">28°C, 180 rpm</td><td>细菌培养</td></tr>
+                  <tr><td>超净工作台</td><td class="mono">—</td><td>无菌操作</td></tr>
+                  <tr><td>高压灭菌锅</td><td class="mono">121°C</td><td>试剂灭菌</td></tr>
+                  <tr><td>磁力搅拌器</td><td class="mono">—</td><td>溶解海藻酸钠</td></tr>
+                  <tr><td>分光光度计</td><td class="mono">OD₆₀₀</td><td>菌液浓度测定</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">实验分组</div>
+              <table class="comp-table">
+                <thead><tr><th>组别</th><th>处理</th><th>目的</th></tr></thead>
+                <tbody>
+                  <tr><td>CK</td><td>不包衣</td><td>基础对照</td></tr>
+                  <tr><td>Alg-Ca 空包衣</td><td>海藻酸钠 + CaCl₂，无菌液</td><td>排除包衣材料影响</td></tr>
+                  <tr><td>Bacteria only</td><td>只有菌液，无海藻酸钠/CaCl₂</td><td>判断菌液直接接种效果</td></tr>
+                  <tr><td>Bacteria + Alg-Ca</td><td>菌液 + 海藻酸钠 + CaCl₂</td><td>正式包衣处理</td></tr>
+                </tbody>
+              </table>
+              <div class="box info" style="margin-top:0.8rem;">
+                <div class="box-title">💡 提示</div>
+                <ul>
+                  <li>如果目标是评价定殖量，必须增加 <strong>CFU/seed 检测</strong>（见步骤 10）。</li>
+                  <li>所有组别应使用相同数量的种子和一致的处理条件。</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">操作步骤</div>
+              <ol class="steps">
+                <li>
+                  <strong>配制 3% 海藻酸钠溶液</strong>：称取 3 g sodium alginate，加入约 80 mL ddH₂O。边搅拌边缓慢撒入粉末（避免结块），50–60°C 加热搅拌至完全溶解，补水定容至 100 mL。121°C 高压灭菌 15–20 min，冷却后 4°C 保存。
+                  <div class="formula" style="margin-top:0.4rem;">3% (w/v) sodium alginate = 3 g / 100 mL</div>
+                </li>
+                <li>
+                  <strong>配制 3% CaCl₂ 溶液</strong>：称取 3 g CaCl₂，加 ddH₂O 溶解并定容至 100 mL。121°C 高压灭菌 15–20 min，或 0.22 μm 过滤灭菌。室温或 4°C 保存。
+                </li>
+                <li>
+                  <strong>活化菌株</strong>：从 -80°C 甘油管挑取菌株，接种至 R2A 或 1/2 TSB 平板/液体培养基，28°C 培养至菌体生长良好。
+                </li>
+                <li>
+                  <strong>制备菌液</strong>：将菌株接种至 R2A 或 1/2 TSB 液体培养基，28°C、180 rpm 振荡培养至对数期或稳定期。离心收集菌体，用无菌水或 0.85% NaCl 洗涤 2 次，重悬并调节 OD₆₀₀ = 0.5–1.0。注意避免用 PBS 作为最终重悬液，因为后续 CaCl₂ 可能与磷酸盐形成沉淀。
+                </li>
+                <li>
+                  <strong>种子预处理</strong>：参见「种子消毒与细菌接种」Protocol 中的种子消毒与预萌发步骤。
+                </li>
+                <li>
+                  <strong>制备含菌包衣液</strong>：按 1:1 比例混合 3% 海藻酸钠与菌液。例如：1 mL 海藻酸钠 + 1 mL 菌液 = 2 mL 含菌包衣液（实际海藻酸钠终浓度 1.5%）。
+                </li>
+                <li>
+                  <strong>浸泡种子</strong>：将种子放入无菌离心管，加入足量含菌包衣液使种子完全润湿。轻轻混匀，室温浸泡 30 min。
+                </li>
+                <li>
+                  <strong>倒掉多余包衣液</strong>：浸泡结束后倒掉多余液体，让种子表面保留一层均匀液膜，避免后续交联时产生大量游离胶块。
+                </li>
+                <li>
+                  <strong>CaCl₂ 交联</strong>：加入 3% CaCl₂ 溶液，轻轻晃动使所有种子充分接触，室温交联 30 min。交联完成后种子表面应形成较稳定的凝胶膜。
+                </li>
+                <li>
+                  <strong>去除 CaCl₂ 并晾干</strong>：倒掉 CaCl₂ 溶液，可用无菌水快速冲洗 1 次（注意不要剧烈震荡，避免破坏包衣层）。将包衣种子铺在无菌滤纸上，在超净台中晾至表面不粘连。
+                </li>
+                <li>
+                  <strong>CFU/seed 检测</strong>：每个处理随机取 3–5 粒包衣种子，每粒加入 1 mL 无菌水，剧烈涡旋 1–2 min，梯度稀释后涂布 R2A 或 1/2 TSA 平板，28°C 培养至菌落可计数，计算每粒种子的 CFU。
+                  <div class="formula" style="margin-top:0.4rem;">CFU/seed = 平板菌落数 × 稀释倍数 × 洗脱体积 / 种子数</div>
+                </li>
+                <li>
+                  <strong>播种</strong>：将包衣后的种子尽快播种（建议当天），每处理使用相同数量种子，记录播种基质、浇水量和培养条件。
+                </li>
+              </ol>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">预期结果</div>
+              <div class="box success">
+                <div class="box-title">✅ 正常结果</div>
+                <ul>
+                  <li>包衣后种子表面形成均匀、稳定的凝胶膜，不粘连。</li>
+                  <li>CFU/seed 检测结果稳定，重复间变异系数 <30%。</li>
+                  <li>Alg-Ca 空包衣对照组与不包衣 CK 组萌发率无显著差异。</li>
+                  <li>Bacteria + Alg-Ca 组细菌定殖量显著高于 Bacteria only 组。</li>
+                  <li>播种后 7-14 天，接种组与对照组在株高、根长等表型上可观察到差异。</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">故障排除</div>
+              <table class="comp-table">
+                <thead><tr><th>问题</th><th>可能原因</th><th>解决方案</th></tr></thead>
+                <tbody>
+                  <tr><td>海藻酸钠结块</td><td>粉末加入过快</td><td>边搅拌边缓慢撒入，50–60°C 加热搅拌数小时</td></tr>
+                  <tr><td>包衣不均匀</td><td>种子堆积或包衣液太少</td><td>增加混匀，保证完全润湿</td></tr>
+                  <tr><td>种子粘连</td><td>海藻酸钠过多或干燥不足</td><td>倒掉多余液体，晾至不粘连</td></tr>
+                  <tr><td>包衣层脱落</td><td>交联不足</td><td>延长 CaCl₂ 交联至 30–45 min</td></tr>
+                  <tr><td>大量胶块形成</td><td>未倒掉多余海藻酸钠</td><td>交联前必须去除多余包衣液</td></tr>
+                  <tr><td>萌发率下降</td><td>CaCl₂ 残留或浸泡时间过长</td><td>设置空包衣对照，缩短处理时间</td></tr>
+                  <tr><td>菌量不稳定</td><td>OD₆₀₀ 与实际活菌数不一致</td><td>做 CFU/seed 检测</td></tr>
+                  <tr><td>材料本身影响植物</td><td>海藻酸钠/CaCl₂ 改变早期萌发</td><td>必须设置 Alg-Ca 空包衣对照</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">注意事项</div>
+              <div class="box warn">
+                <div class="box-title">⚠ 操作注意</div>
+                不要一次性把海藻酸钠粉末倒入水中，极易结块，应边搅拌边缓慢撒入。3% 海藻酸钠黏度较高，可能需要搅拌数小时或过夜才能完全溶解。不建议用 0.22 μm 滤膜过滤灭菌海藻酸钠，太黏难以过滤，使用高压灭菌。不要用含 Ca²⁺ 或 Mg²⁺ 的溶液配制海藻酸钠，避免提前交联。避免用 PBS 作为最终菌体重悬液，CaCl₂ 会与磷酸盐形成沉淀。是否冲洗交联后的种子取决于实验目的，正式实验中应固定一种处理方式。不建议过度干燥或高温烘干包衣种子，晾至不粘连即可。包衣后建议当天播种，不建议长时间储存。
+              </div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">参考文献</div>
+              <div class="protocol-references">
+                <ol>
+                  <li>沈佳泳自研 Protocol，正在申请专利。</li>
+                </ol>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Protocol 4: 双管系统无菌玉米苗培养 -->
+      <div class="recipe-card" id="card-proto-double-tube">
+        <div class="recipe-header" onclick="toggleCard('card-proto-double-tube')">
+          <div class="recipe-icon" style="background:rgba(22,163,74,0.1);color:var(--green);">🌱</div>
+          <div>
+            <div class="recipe-title">双管系统无菌玉米苗培养</div>
+            <div class="recipe-subtitle">Double-tube System for Sterile Corn Seedling Culture — 无菌玉米苗双管培养系统</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+
+            <div class="protocol-tags">
+              <span class="tag blue">实验操作</span>
+              <span class="tag green">无菌培养</span>
+              <span class="tag purple">玉米</span>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">目的</div>
+              <div class="protocol-purpose">建立无菌的玉米苗双管培养系统，为后续微生物互作实验提供无菌植物材料。</div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">原理</div>
+              <div class="protocol-principle">利用双层玻璃管构建封闭的无菌培养空间，下层装有1/2 MS琼脂培养基提供营养，上层倒扣形成保护罩。玉米种子经表面消毒后预萌发，将主根插入琼脂中培养。该系统可有效维持无菌环境15天以上，适用于植物-微生物互作研究中的无菌对照实验。</div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">快速参考</div>
+              <div class="quick-ref">
+                <div class="quick-ref-item"><div class="quick-ref-label">消毒试剂</div><div class="quick-ref-value">0.1% HgCl₂</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">培养基</div><div class="quick-ref-value">1/2 MS (0.8% 琼脂)</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">玻璃管规格</div><div class="quick-ref-value">18 × 180 mm</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">预萌发时间</div><div class="quick-ref-value">2 d (48 h)</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">预萌发温度</div><div class="quick-ref-value">28°C</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">培养温度</div><div class="quick-ref-value">25°C</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">光周期</div><div class="quick-ref-value">16h 光 / 8h 暗</div></div>
+                <div class="quick-ref-item"><div class="quick-ref-label">培养时间</div><div class="quick-ref-value">14 d</div></div>
+              </div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">材料试剂</div>
+              <table class="comp-table">
+                <thead><tr><th>名称</th><th>规格/浓度</th><th>用量</th><th>备注</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><a href="javascript:void(0)" class="protocol-link" onclick="jumpToRecipe('disinfection', 'card-hgcl2')">0.1% HgCl₂（氯化汞）</a></td>
+                    <td class="mono">0.1% (w/v)</td>
+                    <td class="mono">适量</td>
+                    <td>种子表面消毒，<a href="javascript:void(0)" class="protocol-link" onclick="jumpToRecipe('disinfection', 'card-hgcl2')">见消毒试剂标签页</a></td>
+                  </tr>
+                  <tr>
+                    <td>无菌蒸馏水（ddH₂O）</td>
+                    <td class="mono">—</td>
+                    <td class="mono">适量</td>
+                    <td>冲洗种子用</td>
+                  </tr>
+                  <tr>
+                    <td><a href="javascript:void(0)" class="protocol-link" onclick="jumpToRecipe('media', 'card-ms')">1/2 MS 琼脂培养基</a></td>
+                    <td class="mono">0.8% 琼脂</td>
+                    <td class="mono">20 mL/管</td>
+                    <td>底层培养基，<a href="javascript:void(0)" class="protocol-link" onclick="jumpToRecipe('media', 'card-ms')">见培养基标签页</a></td>
+                  </tr>
+                  <tr>
+                    <td><a href="javascript:void(0)" class="protocol-link" onclick="jumpToRecipe('media', 'card-tsb')">TSA 培养基</a></td>
+                    <td class="mono">—</td>
+                    <td class="mono">适量</td>
+                    <td>无菌检测用，<a href="javascript:void(0)" class="protocol-link" onclick="jumpToRecipe('media', 'card-tsb')">见培养基标签页</a></td>
+                  </tr>
+                  <tr>
+                    <td>无病害症状的完整玉米种子</td>
+                    <td class="mono">—</td>
+                    <td class="mono">按需</td>
+                    <td>挑选饱满、无破损的种子</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">耗材</div>
+              <table class="comp-table">
+                <thead><tr><th>名称</th><th>规格</th><th>用途</th></tr></thead>
+                <tbody>
+                  <tr><td>无菌培养皿</td><td class="mono">90 mm</td><td>预萌发容器</td></tr>
+                  <tr><td>无菌玻璃管（双层）</td><td class="mono">18 × 180 mm</td><td>双管培养系统主体</td></tr>
+                  <tr><td>Parafilm 封口膜</td><td class="mono">—</td><td>封口连接处</td></tr>
+                  <tr><td>无菌镊子</td><td class="mono">—</td><td>种子操作</td></tr>
+                  <tr><td>移液器及无菌吸头</td><td class="mono">250 µL</td><td>无菌检测取样</td></tr>
+                  <tr><td>无菌滤纸</td><td class="mono">—</td><td>预萌发保湿</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">设备</div>
+              <table class="comp-table">
+                <thead><tr><th>设备名称</th><th>型号/规格</th><th>用途</th></tr></thead>
+                <tbody>
+                  <tr><td>超净工作台</td><td class="mono">—</td><td>无菌操作</td></tr>
+                  <tr><td>高压灭菌锅</td><td class="mono">121°C</td><td>培养基和器材灭菌</td></tr>
+                  <tr><td>恒温培养箱</td><td class="mono">25°C / 28°C</td><td>种子萌发和培养</td></tr>
+                  <tr><td>人工气候箱</td><td class="mono">25°C, 16h 光/8h 暗</td><td>玉米苗培养</td></tr>
+                  <tr><td>酒精灯</td><td class="mono">—</td><td>火焰封口操作</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">操作步骤</div>
+
+              <div class="protocol-step-group">
+                <div class="protocol-step-title">一、玉米种子的表面消毒与催芽</div>
+
+                <div class="protocol-substep-group">
+                  <div class="protocol-substep-title">1.1 种子预处理</div>
+                  <ol class="steps">
+                    <li><strong>种子筛选</strong>：挑选饱满扁平、无病害症状的完整玉米种子。</li>
+                    <li><strong>ddH₂O 清洗</strong>：用 ddH₂O 清洗种子 5 min。</li>
+                    <li><strong>HgCl₂ 消毒</strong>：弃去 ddH₂O，加入 <a href="javascript:void(0)" class="protocol-link" onclick="jumpToRecipe('disinfection', 'card-hgcl2')">0.1% HgCl₂</a> 清洗 10 min。</li>
+                    <li><strong>冲洗</strong>：弃去 HgCl₂，用 ddH₂O 清洗 5 min，重复 3 遍。</li>
+                    <li><strong>无菌验证</strong>：取最后一次冲洗的 250 µL 水涂布 TSA 平板。</li>
+                  </ol>
+                </div>
+
+                <div class="protocol-substep-group">
+                  <div class="protocol-substep-title">1.2 预萌发处理</div>
+                  <ol class="steps">
+                    <li><strong>预萌发设置</strong>：将种子胚朝上放置于含有无菌湿润滤纸的 9 cm 圆皿中，每皿放置 3 粒种子，保持适当间距。</li>
+                    <li><strong>封口</strong>：用 Parafilm 封口膜封口皿盖。</li>
+                    <li><strong>预萌发培养</strong>：28°C 黑暗条件下预萌发 2 d（48 h）。</li>
+                    <li><strong>无菌验证</strong>：在第 24 h 和 48 h 时各取 250 µL 冲洗水涂布 TSA 平板。</li>
+                    <li><strong>种子筛选</strong>：挑选主根长至 1-2 cm 的健康萌发种子，剔除污染、畸形或生长不良的种子。</li>
+                  </ol>
+                </div>
+              </div>
+
+              <div class="protocol-step-group">
+                <div class="protocol-step-title">二、构建底层培养基</div>
+                <ol class="steps">
+                  <li><strong>准备培养基</strong>：取 18 × 180 mm 无菌玻璃管，每管加入 20 mL <a href="javascript:void(0)" class="protocol-link" onclick="jumpToRecipe('media', 'card-ms')">1/2 MS 琼脂（0.8%）</a>。</li>
+                  <li><strong>接种操作</strong>：用无菌镊子夹住种子，将主根轻轻插入琼脂中。</li>
+                  <li><strong>关键</strong>：仅让根尖或主根下半部分没入琼脂，不可过度深插，防止根系缺氧。</li>
+                </ol>
+              </div>
+
+              <div class="protocol-step-group">
+                <div class="protocol-step-title">三、封口与闭环构建</div>
+                <ol class="steps">
+                  <li>取相同尺寸（18 × 180 mm）的无菌空玻璃管。</li>
+                  <li>在酒精灯火焰旁以"口对口"方式倒扣在下层管上。</li>
+                  <li>使用 Parafilm 封口膜紧密缠绕连接处多圈。</li>
+                </ol>
+              </div>
+
+              <div class="protocol-step-group">
+                <div class="protocol-step-title">四、培养</div>
+                <ol class="steps">
+                  <li>将双管系统转移至人工气候箱。</li>
+                  <li>25°C，16 h 光照 / 8 h 黑暗，光照强度 4000 lx，湿度 54%。</li>
+                  <li>培养时间：14 d。</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">预期结果</div>
+              <div class="box success">
+                <div class="box-title">✅ 正常结果</div>
+                <ul>
+                  <li>TSA 平板培养过夜后应无菌落生长，证明消毒和操作过程无污染。</li>
+                  <li>种子萌发率 > 90%，主根长度 1-2 cm。</li>
+                  <li>培养期间无污染，植株生长正常。</li>
+                  <li>14 d 后玉米苗长出 2-3 片真叶，根系发育良好。</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">故障排除</div>
+              <table class="comp-table">
+                <thead><tr><th>问题</th><th>可能原因</th><th>解决方案</th></tr></thead>
+                <tbody>
+                  <tr><td>TSA 平板有菌落生长</td><td>消毒不彻底或操作污染</td><td>延长 HgCl₂ 浸泡时间，检查超净台无菌状态</td></tr>
+                  <tr><td>种子萌发率低</td><td>种子活力差或温度不适宜</td><td>更换新鲜种子批次，确认 28°C 预萌发</td></tr>
+                  <tr><td>培养期间污染</td><td>封口不严或培养基灭菌不彻底</td><td>检查 Parafilm 缠绕是否紧密，重新灭菌培养基</td></tr>
+                  <tr><td>根系生长不良</td><td>插入过深或培养基营养不足</td><td>仅让根尖没入琼脂，检查 1/2 MS 配方</td></tr>
+                  <tr><td>植株徒长</td><td>光照不足</td><td>确认光照强度 4000 lx，光周期 16h/8h</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">注意事项</div>
+              <div class="box warn">
+                <div class="box-title">⚠ 安全与操作注意</div>
+                <ul>
+                  <li><strong>HgCl₂ 有剧毒！</strong>操作必须在通风橱中进行，佩戴双层手套和护目镜。废液收集至专用废液桶。</li>
+                  <li>冲洗步骤务必彻底，残留 HgCl₂ 会抑制种子萌发和根系生长。</li>
+                  <li>封口时在酒精灯火焰旁操作，减少污染风险。</li>
+                  <li>每管仅放置 1 粒种子，避免根系交叉影响生长。</li>
+                  <li>无菌检测是关键质控步骤，任何菌落出现均需重新消毒处理。</li>
+                  <li>记录每批次种子的来源、消毒时间、萌发率等关键参数。</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="protocol-section">
+              <div class="protocol-section-title">参考文献</div>
+              <div class="protocol-references">
+                <ol>
+                  <li>Niu B, Kolter R. (2017). Efficient Transformation of <em>Pantoea agglomerans</em> and Related Species. <em>Bio-protocol</em> 8(12): e2885.</li>
+                </ol>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
-  <div class="footer">
-    <div class="footer-title">最近更新</div>
-    <ul class="update-list">
-      <li class="update-item">
-        <span class="update-date">2026-05-06</span>
-        <span class="update-tag new">新增</span>
-        <span class="update-desc">KB / 1/2 MS / V8 培养基 — 假单胞菌培养、植物组培、卵菌/真菌培养</span>
-      </li>
-      <li class="update-item">
-        <span class="update-date">2026-05-06</span>
-        <span class="update-tag new">新增</span>
-        <span class="update-desc">10 mM MgCl₂ 缓冲液 — 孢子悬浮液配制专用</span>
-      </li>
-      <li class="update-item">
-        <span class="update-date">2026-05-06</span>
-        <span class="update-tag new">新增</span>
-        <span class="update-desc">全局搜索栏 — 支持跨标签页搜索所有试剂、培养基和配方</span>
-      </li>
-      <li class="update-item">
-        <span class="update-date">2026-05-06</span>
-        <span class="update-tag new">新增</span>
-        <span class="update-desc">PCR 反应标签页 — Taq / Phusion 体系计算器、dNTP 配制、琼脂糖凝胶</span>
-      </li>
-      <li class="update-item">
-        <span class="update-date">2026-05-06</span>
-        <span class="update-tag opt">优化</span>
-        <span class="update-desc">培养基液体/固体切换 — PDA/PDB、TSB/TSA、LB/LBA、R2A 统一切换按钮</span>
-      </li>
-      <li class="update-item">
-        <span class="update-date">2026-05-06</span>
-        <span class="update-tag new">新增</span>
-        <span class="update-desc">R2A 培养基 — 环境微生物专用低营养培养基（8 组分配方）</span>
-      </li>
-      <li class="update-item">
-        <span class="update-date">2026-05-06</span>
-        <span class="update-tag opt">优化</span>
-        <span class="update-desc">抗生素板块扩展至 10 种 — 新增 Carb / Gm / Sm / Spec / Ny</span>
-      </li>
-      <li class="update-item">
-        <span class="update-date">2026-05-06</span>
-        <span class="update-tag fix">主题</span>
-        <span class="update-desc">界面切换为浅色主题，提升实验室环境下的可读性</span>
-      </li>
-    </ul>
+    <!-- ==================== 最近更新 ==================== -->
+    <div class="panel" id="panel-changelog">
+      <div class="recipe-card open" id="card-changelog">
+        <div class="recipe-header" onclick="toggleCard('card-changelog')">
+          <div class="recipe-icon" style="background:rgba(37,99,235,0.1);color:var(--accent);">📝</div>
+          <div>
+            <div class="recipe-title">最近更新</div>
+            <div class="recipe-subtitle">Changelog — 所有版本更新记录</div>
+          </div>
+          <span class="recipe-toggle">▾</span>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-content">
+            <div class="update-list">
+              <div class="update-item">
+                <span class="update-date">2026-06-08</span>
+                <span class="update-tag opt">优化</span>
+                <span class="update-desc">新增「缓冲液」标签页 — 将 MgCl₂ 和 PBS 从原分类中独立出来，分类更清晰</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-06-02</span>
+                <span class="update-tag opt">优化</span>
+                <span class="update-desc">界面优化 — 添加返回Protocol按钮、回到顶部按钮，默认折叠所有配方卡片</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-06-02</span>
+                <span class="update-tag new">新增</span>
+                <span class="update-desc">双管系统无菌玉米苗培养 Protocol — 无菌玉米苗双管培养系统完整流程（含链接引用）</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-06-01</span>
+                <span class="update-tag opt">优化</span>
+                <span class="update-desc">网页标题更新为「实验室配方与实验流程」，涵盖配方计算器与 Protocol 指南</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-06-04</span>
+                <span class="update-tag opt">优化</span>
+                <span class="update-desc">抗生素表格新增「类型」列，新增 Piperacillin（β-内酰胺类）</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-06-01</span>
+                <span class="update-tag new">新增</span>
+                <span class="update-desc">海藻酸钠-CaCl₂ 交联型细菌种子包衣 — 细菌固定化种子包衣完整流程</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-06-01</span>
+                <span class="update-tag new">新增</span>
+                <span class="update-desc">Protocol 标签页 — 统一格式整理实验操作流程（种子消毒接种、Bm 接种鉴定）</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-05-06</span>
+                <span class="update-tag new">新增</span>
+                <span class="update-desc">KB / 1/2 MS / V8 培养基 — 假单胞菌培养、植物组培、卵菌/真菌培养</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-05-06</span>
+                <span class="update-tag new">新增</span>
+                <span class="update-desc">10 mM MgCl₂ 缓冲液 — 孢子悬浮液配制专用</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-05-06</span>
+                <span class="update-tag new">新增</span>
+                <span class="update-desc">全局搜索栏 — 支持跨标签页搜索所有试剂、培养基和配方</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-05-06</span>
+                <span class="update-tag new">新增</span>
+                <span class="update-desc">PCR 反应标签页 — Taq / Phusion 体系计算器、dNTP 配制、琼脂糖凝胶</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-05-06</span>
+                <span class="update-tag opt">优化</span>
+                <span class="update-desc">培养基液体/固体切换 — PDA/PDB、TSB/TSA、LB/LBA、R2A 统一切换按钮</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-05-06</span>
+                <span class="update-tag new">新增</span>
+                <span class="update-desc">R2A 培养基 — 环境微生物专用低营养培养基（8 组分配方）</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-05-06</span>
+                <span class="update-tag opt">优化</span>
+                <span class="update-desc">抗生素板块扩展至 10 种 — 新增 Carb / Gm / Sm / Spec / Ny</span>
+              </div>
+              <div class="update-item">
+                <span class="update-date">2026-05-06</span>
+                <span class="update-tag fix">主题</span>
+                <span class="update-desc">界面切换为浅色主题，提升实验室环境下的可读性</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
 </div>
+
+<!-- Back to Protocol Button -->
+<button class="back-to-protocol" id="backToProtocol" onclick="goBackToProtocol()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+  返回Protocol
+</button>
+
+<!-- Scroll to Top Button -->
+<button class="scroll-to-top" id="scrollToTop" onclick="scrollToTop()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="18 15 12 9 6 15"/>
+  </svg>
+</button>
 
 <script>
 // --- Nav ---
@@ -2786,6 +3774,11 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
+
+    // Hide back button when manually switching tabs
+    hideBackButton();
+    sessionStorage.removeItem('protocolScrollPos');
+    sessionStorage.removeItem('jumpedFromProtocol');
   });
 });
 
@@ -3123,6 +4116,25 @@ function calcAbx() {
   document.getElementById('abx-solvent').textContent = vol.toFixed(1) + ' mL ' + solvent;
 }
 
+function onWsTypeChange() {
+  const sel = document.getElementById('ws-type');
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('ws-work-conc').value = parseFloat(opt.dataset.work) || 50;
+  calcWs();
+}
+
+function calcWs() {
+  const sel = document.getElementById('ws-type');
+  const opt = sel.options[sel.selectedIndex];
+  const stockConc = parseFloat(opt.value) || 100;
+  const workConc = parseFloat(document.getElementById('ws-work-conc').value) || 0;
+  const mediaVol = parseFloat(document.getElementById('ws-media-vol').value) || 0;
+  const volUl = (workConc * mediaVol) / stockConc;
+  document.getElementById('ws-vol').textContent = volUl.toFixed(1) + ' μL';
+  document.getElementById('ws-vol-ml').textContent = (volUl / 1000).toFixed(3) + ' mL';
+}
+onWsTypeChange();
+
 // --- PBS ---
 function calcPBS() {
   const v = parseFloat(document.getElementById('pbs-vol').value) || 0;
@@ -3194,6 +4206,118 @@ function calcGel() {
 
 // Init all
 calcPDA(); calcMM(); calcTSB(); calcLB(); calcR2A(); calcKB(); calcMS(); calcV8(); calcV8diy(); calcMgCl2(); calcHgCl2(); calcNaClO(); calcBmSpore(); calc12HEA(); calc12HEAwork(); calcTween(); calcAbx(); calcPBS(); calcTaq(); calcPhusion(); calcDNTP(); calcGel();
+
+// --- Jump to Recipe (Protocol 内部链接) ---
+function jumpToRecipe(panelName, cardId) {
+  // 1. 记录来源页面和滚动位置
+  const protocolPanel = document.getElementById('panel-protocol');
+  const currentScrollPos = protocolPanel.scrollTop;
+  sessionStorage.setItem('protocolScrollPos', currentScrollPos);
+  sessionStorage.setItem('jumpedFromProtocol', 'true');
+
+  // 2. 切换到目标标签页
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const targetBtn = document.querySelector(`.nav-btn[data-panel="${panelName}"]`);
+  const targetPanel = document.getElementById('panel-' + panelName);
+  if (targetBtn) targetBtn.classList.add('active');
+  if (targetPanel) targetPanel.classList.add('active');
+
+  // 3. 展开目标卡片
+  const targetCard = document.getElementById(cardId);
+  if (targetCard && !targetCard.classList.contains('open')) {
+    targetCard.classList.add('open');
+  }
+
+  // 4. 滚动到目标卡片
+  if (targetCard) {
+    setTimeout(() => {
+      targetCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+
+  // 5. 显示返回按钮
+  showBackButton();
+}
+
+// Show Back Button
+function showBackButton() {
+  const backBtn = document.getElementById('backToProtocol');
+  if (backBtn) {
+    backBtn.classList.add('visible');
+  }
+}
+
+// Hide Back Button
+function hideBackButton() {
+  const backBtn = document.getElementById('backToProtocol');
+  if (backBtn) {
+    backBtn.classList.remove('visible');
+  }
+}
+
+// Go Back to Protocol
+function goBackToProtocol() {
+  // 1. 切换回Protocol标签页
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const protocolBtn = document.querySelector('.nav-btn[data-panel="protocol"]');
+  const protocolPanel = document.getElementById('panel-protocol');
+  if (protocolBtn) protocolBtn.classList.add('active');
+  if (protocolPanel) protocolPanel.classList.add('active');
+
+  // 2. 恢复滚动位置
+  const savedScrollPos = sessionStorage.getItem('protocolScrollPos');
+  if (savedScrollPos !== null) {
+    setTimeout(() => {
+      protocolPanel.scrollTop = parseInt(savedScrollPos);
+    }, 100);
+  }
+
+  // 3. 隐藏返回按钮
+  hideBackButton();
+
+  // 4. 清除存储的状态
+  sessionStorage.removeItem('protocolScrollPos');
+  sessionStorage.removeItem('jumpedFromProtocol');
+}
+
+// Check if should show back button on page load
+function checkBackButtonState() {
+  const jumpedFromProtocol = sessionStorage.getItem('jumpedFromProtocol');
+  if (jumpedFromProtocol === 'true') {
+    showBackButton();
+  }
+}
+
+// Initialize back button state
+checkBackButtonState();
+
+// --- Scroll to Top ---
+function scrollToTop() {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
+
+// Show/Hide Scroll to Top button based on scroll position
+function toggleScrollToTopButton() {
+  const scrollBtn = document.getElementById('scrollToTop');
+  if (scrollBtn) {
+    if (window.scrollY > 300) {
+      scrollBtn.classList.add('visible');
+    } else {
+      scrollBtn.classList.remove('visible');
+    }
+  }
+}
+
+// Add scroll event listener
+window.addEventListener('scroll', toggleScrollToTopButton);
+
+// Initialize scroll button state
+toggleScrollToTopButton();
 
 // Keyboard shortcuts
 document.addEventListener('keydown', e => {
