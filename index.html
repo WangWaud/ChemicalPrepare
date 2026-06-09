@@ -534,6 +534,13 @@
     .recipe-card.search-match { border-color: var(--accent); }
     .recipe-card.search-match .recipe-header { background: rgba(37,99,235,0.04); }
 
+    /* Search text highlight */
+    .search-highlight {
+      background: #fff3b0;
+      border-radius: 2px;
+      padding: 0 1px;
+    }
+
     /* Update List */
     .update-list {
       display: flex;
@@ -3809,11 +3816,45 @@ function buildSearchIndex() {
 }
 buildSearchIndex();
 
+function clearHighlights() {
+  document.querySelectorAll('.search-highlight').forEach(mark => {
+    const parent = mark.parentNode;
+    parent.replaceChild(document.createTextNode(mark.textContent), mark);
+    parent.normalize();
+  });
+}
+
+function highlightInElement(el, query) {
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+  const textNodes = [];
+  while (walker.nextNode()) textNodes.push(walker.currentNode);
+  const re = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+  textNodes.forEach(node => {
+    if (!re.test(node.textContent)) return;
+    re.lastIndex = 0;
+    const frag = document.createDocumentFragment();
+    let lastIdx = 0;
+    let match;
+    while ((match = re.exec(node.textContent)) !== null) {
+      if (match.index > lastIdx) frag.appendChild(document.createTextNode(node.textContent.slice(lastIdx, match.index)));
+      const mark = document.createElement('mark');
+      mark.className = 'search-highlight';
+      mark.textContent = match[0];
+      frag.appendChild(mark);
+      lastIdx = re.lastIndex;
+    }
+    if (lastIdx < node.textContent.length) frag.appendChild(document.createTextNode(node.textContent.slice(lastIdx)));
+    node.parentNode.replaceChild(frag, node);
+  });
+}
+
 function onSearch() {
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
   const clearBtn = document.getElementById('searchClear');
   const info = document.getElementById('searchResultsInfo');
   clearBtn.classList.toggle('show', q.length > 0);
+
+  clearHighlights();
 
   if (!q) {
     // Reset: show all cards, restore normal panel view
@@ -3839,6 +3880,7 @@ function onSearch() {
       c.el.classList.remove('search-hidden');
       c.el.classList.add('search-match');
       c.el.classList.add('open');
+      highlightInElement(c.el, q);
       matchCount++;
     } else {
       c.el.classList.add('search-hidden');
@@ -3853,6 +3895,7 @@ function onSearch() {
 }
 
 function clearSearch() {
+  clearHighlights();
   document.getElementById('searchInput').value = '';
   onSearch();
   document.getElementById('searchInput').focus();
