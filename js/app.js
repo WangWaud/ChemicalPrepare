@@ -87,6 +87,352 @@ function toggleCard(id) {
     ?.setAttribute('aria-expanded', String(card.classList.contains('open')));
 }
 
+// --- Card Word Export ---
+function initWordExportButtons() {
+  document.querySelectorAll('.recipe-card').forEach(card => {
+    const header = card.querySelector('.recipe-header');
+    const toggle = card.querySelector('.recipe-toggle');
+    if (!header || header.querySelector('.word-export-btn')) return;
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'word-export-btn';
+    button.textContent = '导出 Word';
+    button.setAttribute('aria-label', `导出${card.querySelector('.recipe-title')?.textContent?.trim() || '当前卡片'}为 Word`);
+    button.addEventListener('click', event => exportCardToWord(card.id, event));
+    header.insertBefore(button, toggle || null);
+  });
+}
+
+function sanitizeFileName(name) {
+  return (name || '实验卡片')
+    .replace(/[\\/:*?"<>|]/g, '')
+    .replace(/\s+/g, '')
+    .slice(0, 80) || '实验卡片';
+}
+
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+function normalizeText(value) {
+  return (value || '').replace(/\s+/g, ' ').trim();
+}
+
+function textFromElement(el) {
+  if (!el) return '';
+  if (el.matches?.('input, select, textarea')) {
+    if (el.tagName === 'SELECT') {
+      return normalizeText(el.options[el.selectedIndex]?.textContent || el.value);
+    }
+    return normalizeText(el.value);
+  }
+  return normalizeText(el.textContent);
+}
+
+function xmlEscape(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function wordRun(text, options = {}) {
+  const font = options.mono ? 'Courier New' : 'Arial';
+  const eastAsia = options.heading ? 'Heiti SC' : 'Songti SC';
+  const size = options.size || 22;
+  const bold = options.bold ? '<w:b/>' : '';
+  const preserve = /^\s|\s$/.test(text) ? ' xml:space="preserve"' : '';
+
+  return `<w:r><w:rPr><w:rFonts w:ascii="${font}" w:hAnsi="${font}" w:eastAsia="${eastAsia}" w:cs="${font}"/>${bold}<w:color w:val="000000"/><w:sz w:val="${size}"/><w:szCs w:val="${size}"/></w:rPr><w:t${preserve}>${xmlEscape(text)}</w:t></w:r>`;
+}
+
+function paragraphProperties(options = {}) {
+  const parts = [];
+  if (options.style) parts.push(`<w:pStyle w:val="${options.style}"/>`);
+  if (options.numId) {
+    parts.push(`<w:numPr><w:ilvl w:val="${options.ilvl || 0}"/><w:numId w:val="${options.numId}"/></w:numPr>`);
+  }
+  parts.push(`<w:spacing w:before="${options.before ?? 80}" w:after="${options.after ?? 120}" w:line="276" w:lineRule="auto"/>`);
+  return `<w:pPr>${parts.join('')}</w:pPr>`;
+}
+
+function wordParagraph(text, options = {}) {
+  const normalized = normalizeText(text);
+  if (!normalized) return '';
+
+  return `<w:p>${paragraphProperties(options)}${wordRun(normalized, {
+    bold: options.bold,
+    heading: options.heading,
+    mono: options.mono,
+    size: options.size,
+  })}</w:p>`;
+}
+
+function wordTable(rows) {
+  const filteredRows = rows
+    .map(row => row.map(cell => normalizeText(cell)))
+    .filter(row => row.some(Boolean));
+  if (!filteredRows.length) return '';
+
+  const tableRows = filteredRows.map((row, rowIndex) => {
+    const cells = row.map(cell => {
+      const shading = rowIndex === 0 ? '<w:shd w:fill="F2F2F2"/>' : '';
+      const paragraph = cell ? wordParagraph(cell, { bold: rowIndex === 0, after: 40 }) : '<w:p/>';
+      return `<w:tc><w:tcPr><w:tcW w:w="0" w:type="auto"/><w:tcMar><w:top w:w="100" w:type="dxa"/><w:left w:w="120" w:type="dxa"/><w:bottom w:w="100" w:type="dxa"/><w:right w:w="120" w:type="dxa"/></w:tcMar>${shading}</w:tcPr>${paragraph}</w:tc>`;
+    }).join('');
+    return `<w:tr>${cells}</w:tr>`;
+  }).join('');
+
+  return `<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:tblBorders><w:top w:val="single" w:sz="6" w:space="0" w:color="666666"/><w:left w:val="single" w:sz="6" w:space="0" w:color="666666"/><w:bottom w:val="single" w:sz="6" w:space="0" w:color="666666"/><w:right w:val="single" w:sz="6" w:space="0" w:color="666666"/><w:insideH w:val="single" w:sz="6" w:space="0" w:color="666666"/><w:insideV w:val="single" w:sz="6" w:space="0" w:color="666666"/></w:tblBorders><w:tblCellMar><w:top w:w="100" w:type="dxa"/><w:left w:w="120" w:type="dxa"/><w:bottom w:w="100" w:type="dxa"/><w:right w:w="120" w:type="dxa"/></w:tblCellMar></w:tblPr>${tableRows}</w:tbl>`;
+}
+
+function readTableRows(table) {
+  return [...table.querySelectorAll('tr')].map(row => (
+    [...row.querySelectorAll('th, td')].map(cell => textFromElement(cell))
+  ));
+}
+
+function readQuickRefRows(section) {
+  return [...section.querySelectorAll('.quick-ref-item')].map(item => {
+    const label = textFromElement(item.querySelector('.quick-ref-label'));
+    const value = textFromElement(item.querySelector('.quick-ref-value'));
+    return [label, value];
+  });
+}
+
+function shouldSkipExportNode(el) {
+  return !el
+    || el.matches?.('.word-export-btn, .recipe-toggle, .media-toggle, script, style, button, .recipe-icon');
+}
+
+function elementToWordBlocks(el) {
+  if (shouldSkipExportNode(el)) return [];
+
+  if (el.matches?.('.recipe-title')) {
+    return [wordParagraph(textFromElement(el), { style: 'Title', heading: true, bold: true, size: 36, before: 0, after: 120 })];
+  }
+  if (el.matches?.('.recipe-subtitle')) {
+    return [wordParagraph(textFromElement(el), { style: 'Subtitle', size: 20, before: 0, after: 180 })];
+  }
+  if (el.matches?.('.protocol-tags')) {
+    return [];
+  }
+  if (el.matches?.('table')) {
+    return [wordTable(readTableRows(el))];
+  }
+  if (el.matches?.('.quick-ref')) {
+    return [wordTable([['项目', '内容'], ...readQuickRefRows(el)])];
+  }
+  if (el.matches?.('ol, ul')) {
+    const ordered = el.tagName === 'OL';
+    return [...el.children]
+      .filter(child => child.tagName === 'LI')
+      .map((item, index) => wordParagraph(textFromElement(item), {
+        numId: ordered ? 1 : 2,
+        before: 40,
+        after: 60,
+        bold: false,
+        ilvl: 0,
+      }));
+  }
+  if (el.matches?.('input, select, textarea')) {
+    return [wordParagraph(textFromElement(el), { mono: true })];
+  }
+  if (el.matches?.('.protocol-section-title, .calc-title, .divider, .box-title, .result-title, h2, h3, h4')) {
+    return [wordParagraph(textFromElement(el), { style: 'Heading2', heading: true, bold: true, size: 24, before: 180, after: 80 })];
+  }
+
+  const childBlocks = [...el.children].flatMap(child => elementToWordBlocks(child));
+  if (childBlocks.length) return childBlocks;
+
+  const text = textFromElement(el);
+  if (!text) return [];
+  return [wordParagraph(text, {
+    mono: el.classList?.contains('mono'),
+    before: 60,
+    after: 100,
+  })];
+}
+
+function cardToWordXml(card) {
+  const title = textFromElement(card.querySelector('.recipe-title')) || '实验卡片';
+  const subtitle = textFromElement(card.querySelector('.recipe-subtitle'));
+  const tags = [...card.querySelectorAll('.protocol-tags .tag')].map(tag => textFromElement(tag)).filter(Boolean);
+  const body = card.querySelector('.recipe-content') || card.querySelector('.recipe-body') || card;
+  const blocks = [
+    wordParagraph(title, { style: 'Title', heading: true, bold: true, size: 36, before: 0, after: 120 }),
+    subtitle ? wordParagraph(subtitle, { style: 'Subtitle', size: 20, before: 0, after: 180 }) : '',
+    tags.length ? wordParagraph(`标签：${tags.join(' / ')}`) : '',
+    ...[...body.children].flatMap(child => elementToWordBlocks(child)),
+  ].filter(Boolean);
+
+  return blocks.join('');
+}
+
+function buildDocumentXml(card) {
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>${cardToWordXml(card)}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+}
+
+function buildStylesXml() {
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Songti SC" w:cs="Arial"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:color w:val="000000"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="120" w:line="276" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Songti SC" w:cs="Arial"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr></w:style><w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Heiti SC" w:cs="Arial"/><w:b/><w:sz w:val="36"/><w:szCs w:val="36"/></w:rPr></w:style><w:style w:type="paragraph" w:styleId="Subtitle"><w:name w:val="Subtitle"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Songti SC" w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:color w:val="333333"/></w:rPr></w:style><w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="Heading 2"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Heiti SC" w:cs="Arial"/><w:b/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr></w:style><!-- SimSun fallback for Songti SC; SimHei fallback for Heiti SC --></w:styles>`;
+}
+
+function buildNumberingXml() {
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:abstractNum w:abstractNumId="1"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum><w:abstractNum w:abstractNumId="2"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="1"/></w:num><w:num w:numId="2"><w:abstractNumId w:val="2"/></w:num></w:numbering>`;
+}
+
+function buildSettingsXml() {
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:displayBackgroundShape/><w:defaultTabStop w:val="420"/><w:characterSpacingControl w:val="doNotCompress"/></w:settings>`;
+}
+
+function buildContentTypesXml() {
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/></Types>`;
+}
+
+function buildRootRelsXml() {
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+}
+
+function buildDocumentRelsXml() {
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/></Relationships>`;
+}
+
+function buildDocxPackage(card) {
+  return createZip({
+    '[Content_Types].xml': buildContentTypesXml(),
+    '_rels/.rels': buildRootRelsXml(),
+    'word/_rels/document.xml.rels': buildDocumentRelsXml(),
+    'word/document.xml': buildDocumentXml(card),
+    'word/styles.xml': buildStylesXml(),
+    'word/settings.xml': buildSettingsXml(),
+    'word/numbering.xml': buildNumberingXml(),
+  });
+}
+
+const crcTable = Array.from({ length: 256 }, (_, index) => {
+  let crc = index;
+  for (let bit = 0; bit < 8; bit += 1) {
+    crc = (crc & 1) ? (0xedb88320 ^ (crc >>> 1)) : (crc >>> 1);
+  }
+  return crc >>> 0;
+});
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc = crcTable[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function encodeUtf8(value) {
+  return new TextEncoder().encode(value);
+}
+
+function concatBytes(chunks) {
+  const length = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const output = new Uint8Array(length);
+  let offset = 0;
+  chunks.forEach(chunk => {
+    output.set(chunk, offset);
+    offset += chunk.length;
+  });
+  return output;
+}
+
+function createZip(files) {
+  const localParts = [];
+  const centralParts = [];
+  let offset = 0;
+
+  Object.entries(files).forEach(([fileName, content]) => {
+    const nameBytes = encodeUtf8(fileName);
+    const data = content instanceof Uint8Array ? content : encodeUtf8(content);
+    const checksum = crc32(data);
+
+    const localHeader = new Uint8Array(30 + nameBytes.length);
+    const localView = new DataView(localHeader.buffer);
+    localView.setUint32(0, 0x04034b50, true);
+    localView.setUint16(4, 20, true);
+    localView.setUint16(6, 0, true);
+    localView.setUint16(8, 0, true);
+    localView.setUint16(10, 0, true);
+    localView.setUint16(12, 0, true);
+    localView.setUint32(14, checksum, true);
+    localView.setUint32(18, data.length, true);
+    localView.setUint32(22, data.length, true);
+    localView.setUint16(26, nameBytes.length, true);
+    localView.setUint16(28, 0, true);
+    localHeader.set(nameBytes, 30);
+
+    localParts.push(localHeader, data);
+
+    const centralHeader = new Uint8Array(46 + nameBytes.length);
+    const centralView = new DataView(centralHeader.buffer);
+    centralView.setUint32(0, 0x02014b50, true);
+    centralView.setUint16(4, 20, true);
+    centralView.setUint16(6, 20, true);
+    centralView.setUint16(8, 0, true);
+    centralView.setUint16(10, 0, true);
+    centralView.setUint16(12, 0, true);
+    centralView.setUint16(14, 0, true);
+    centralView.setUint32(16, checksum, true);
+    centralView.setUint32(20, data.length, true);
+    centralView.setUint32(24, data.length, true);
+    centralView.setUint16(28, nameBytes.length, true);
+    centralView.setUint16(30, 0, true);
+    centralView.setUint16(32, 0, true);
+    centralView.setUint16(34, 0, true);
+    centralView.setUint16(36, 0, true);
+    centralView.setUint32(38, 0, true);
+    centralView.setUint32(42, offset, true);
+    centralHeader.set(nameBytes, 46);
+    centralParts.push(centralHeader);
+
+    offset += localHeader.length + data.length;
+  });
+
+  const centralDirectory = concatBytes(centralParts);
+  const endRecord = new Uint8Array(22);
+  const endView = new DataView(endRecord.buffer);
+  endView.setUint32(0, 0x06054b50, true);
+  endView.setUint16(4, 0, true);
+  endView.setUint16(6, 0, true);
+  endView.setUint16(8, centralParts.length, true);
+  endView.setUint16(10, centralParts.length, true);
+  endView.setUint32(12, centralDirectory.length, true);
+  endView.setUint32(16, offset, true);
+  endView.setUint16(20, 0, true);
+
+  return concatBytes([...localParts, centralDirectory, endRecord]);
+}
+
+function exportCardToWord(cardId, event) {
+  event.stopPropagation();
+  const targetCard = document.getElementById(cardId);
+  if (!targetCard) return;
+
+  const title = targetCard.querySelector('.recipe-title')?.textContent?.trim();
+  const docxBytes = buildDocxPackage(targetCard);
+  const blob = new Blob([docxBytes], { type: DOCX_MIME });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${sanitizeFileName(title)}.docx`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 // --- Search ---
 const searchableCards = [];
 let searchState = null;
@@ -634,6 +980,7 @@ document.querySelectorAll('.recipe-header').forEach(header => {
     }
   });
 });
+initWordExportButtons();
 
 document.querySelectorAll('.input-field').forEach(input => {
   const label = input.closest('.input-row')?.querySelector('.input-label')?.textContent?.trim();

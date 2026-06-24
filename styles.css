@@ -163,6 +163,28 @@
       font-size: 1.2rem;
       transition: transform 0.3s ease;
     }
+    .word-export-btn {
+      margin-left: auto;
+      padding: 0.35rem 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--bg-card);
+      color: var(--text-dim);
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .word-export-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(37,99,235,0.06);
+    }
+    .word-export-btn:active {
+      transform: translateY(1px);
+    }
     .recipe-card.open .recipe-toggle { transform: rotate(180deg); }
 
     .recipe-body { display: none; }
